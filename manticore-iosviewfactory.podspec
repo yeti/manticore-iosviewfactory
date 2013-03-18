@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "manticore-iosviewfactory"
-  s.version      = "0.0.1"
+  s.version      = "0.0.2"
   s.summary      = "manticore-iosviewfactory is a view controller factory pattern for creating iOS applications."
   s.description  = <<-DESC
           manticore-iosviewfactory is a view controller factory pattern for creating iOS applications.
