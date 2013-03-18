@@ -12,8 +12,7 @@ Pod::Spec.new do |s|
   s.author       = { "Richard Fung" => "richard@yetihq.com" }
   s.source       = { :git => "https://github.com/rhfung/manticore-iosviewfactory.git", :tag => "0.0.2" }
   s.platform     = :ios
-  s.source_files = 'MCViewFactory', 'MCViewFactory/**/*.{h,m}', 'public/*.h'
-  s.resources = "MCViewFactory/*.xib"
+  s.source_files = 'MCViewFactory/**/*.{h,m,xib}', 'public/*.h'
   s.frameworks = 'QuartzCore', 'AVFoundation', 'UIKit', 'Foundation'
   s.requires_arc = true
   # s.dependency 'JSONKit', '~> 1.4'
