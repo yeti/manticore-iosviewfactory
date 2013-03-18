@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/rhfung/manticore-iosviewfactory"
   s.license      = 'MIT'
   s.author       = { "Richard Fung" => "richard@yetihq.com" }
-  s.source       = { :git => "https://github.com/rhfung/manticore-iosviewfactory.git", :tag => "0.0.1" }
+  s.source       = { :git => "https://github.com/rhfung/manticore-iosviewfactory.git", :tag => "0.0.2" }
   s.platform     = :ios
   s.source_files = 'MCViewFactory', 'MCViewFactory/**/*.{h,m}'
   s.public_header_files = '*.h'
