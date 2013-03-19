@@ -13,7 +13,7 @@ Install from CocoaPods using this repository.
 Basic Usage
 -----------
 
-    #import "MCViewFactory.h"
+    #import "ManticoreViewFactory.h"
 
 After the application has loaded, for example, in application:didFinishLaunchingWithOptions:
 
