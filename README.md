@@ -57,24 +57,13 @@ After the application has loaded, for example, in application:didFinishLaunching
 Sections and Views
 ------------------
 
-### Section and view convention
-
 Sections should correspond to a user interface's tabs and views should correspond to the pages
 seens within a tab. Prefixes and suffixes are not included in the schema definition.
 
 Sections can also be shown without any views if a single-level hierarchy, but to keep consistency
 a single view should be created for that section.
 
-### Views without the intent
-
-Sometimes a developer wishes to show view controllers without using intents. In this case,
-a dummy section should be created and subviews added inside. Then, the subviews are created
-directly using:
-
-    [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
-
-Other Usage Notes
------------------
+### Two-Level Hierarchy
 
 All first-level view controllers should be suffixed with SectionViewController. Second-level view controllers can be registered and shown using the following snippets:
 
@@ -86,10 +75,48 @@ All first-level view controllers should be suffixed with SectionViewController. 
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     [[MCViewModel sharedModel] setCurrentSection:intent];
 
+Intents and events
+------------------
 
-Future work
------------
+### Sending an intent
 
-The following features haven't been implemented:
+A view transition happens when a new intent is assigned to `setCurrentSection:`.
 
-* History stack for a back button
+    AppModelIntent* intent = [AppModelIntent intentWithSectionName:@"YourSectionViewController"];
+    [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+    [[MCViewModel sharedModel] setCurrentSection:intent];
+
+Valid animation styles include all valid UIViewAnimations and the following constants, listed below:
+
+* UIViewAnimationOptionTransitionFlipFromLeft
+* UIViewAnimationOptionTransitionFlipFromRight
+* ANIMATION_NOTHING
+* ANIMATION_PUSH
+* ANIMATION_POP
+
+Custom values can be assigned to the transition, which are sent to the receving view.
+
+    AppModelIntent* intent = ...;
+    [[intent savedInstanceState] setObject:@"someValue" forKey:@"yourKey"];
+    [[intent savedInstanceState] setObject:@"anotherValue" forKey:@"anotherKey"];
+    // ...
+    [[MCViewModel sharedModel] setCurrentSection:intent];
+
+### Receiving an event
+
+The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
+
+View factory
+------------
+
+Sometimes a developer wishes to show view controllers without using intents. In this case,
+a dummy section should be created and subviews added inside. Then, the subviews are created
+directly using:
+
+    [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
+
+
+History Stack
+-------------
+
+The history stack for a back button hasn't been implemented.
