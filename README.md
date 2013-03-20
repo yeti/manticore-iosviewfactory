@@ -10,6 +10,14 @@ Installation
 
 Install from CocoaPods using this repository.
 
+Features
+--------
+
+Features included with this release:
+
+* Two-level hierarchical view controller
+* Intents to switch between views, similar to Android intents
+
 Basic Usage
 -----------
 
@@ -46,6 +54,24 @@ After the application has loaded, for example, in application:didFinishLaunching
 
     // ...
 
+Sections and Views
+------------------
+
+### Section and view convention
+
+Sections should correspond to a user interface's tabs and views should correspond to the pages
+seens within a tab. Prefixes and suffixes are not included in the schema definition.
+
+Sections can also be shown without any views if a single-level hierarchy, but to keep consistency
+a single view should be created for that section.
+
+### Views without the intent
+
+Sometimes a developer wishes to show view controllers without using intents. In this case,
+a dummy section should be created and subviews added inside. Then, the subviews are created
+directly using:
+
+    [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
 
 Other Usage Notes
 -----------------
@@ -59,3 +85,11 @@ All first-level view controllers should be suffixed with SectionViewController. 
     AppModelIntent* intent = [AppModelIntent intentWithSectionName:@"YourSectionViewController" andViewName:@"YourViewController"];
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     [[MCViewModel sharedModel] setCurrentSection:intent];
+
+
+Future work
+-----------
+
+The following features haven't been implemented:
+
+* History stack for a back button
