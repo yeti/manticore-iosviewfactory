@@ -105,9 +105,24 @@
     // create the view controller
     vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:sectionOrViewName];
     NSAssert(vc != nil, @"VC should exist");
+    [vc onCreate];
     [dictCacheView setObject:vc forKey:sectionOrViewName];
   }
   
+  return vc;
+}
+
+-(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName{
+  // create global view cache if it doesn't already exist
+  if (!dictCacheView){
+    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+  }
+
+  // create the view controller
+  MCViewController* vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:sectionOrViewName];
+  NSAssert(vc != nil, @"VC should exist");
+  [vc onCreate];
+  [dictCacheView setObject:vc forKey:sectionOrViewName];
   return vc;
 }
 
@@ -183,17 +198,13 @@
   
     // edge case: everything we are transitioning to is the same as the previous, need to create a new view
     if (sectionVC == currentSectionVC && vc == currentSectionVC.currentViewVC){
-      sectionVC = (MCSectionViewController*) [[MCViewFactory sharedFactory] createViewController:[intent sectionName]];
-      [dictCacheView setObject:sectionVC forKey:[intent sectionName]];
-      
-      vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:[intent viewName]];
-      [dictCacheView setObject:vc forKey:[intent viewName]];
+      sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
+      vc = (MCViewController*) [self forceLoadViewController:[intent viewName]];
     }
   }else{
     // edge case: transitioning from itself to itself, need to create a new view
     if (sectionVC == currentSectionVC){
-      sectionVC = (MCSectionViewController*) [[MCViewFactory sharedFactory] createViewController:[intent sectionName]];
-      [dictCacheView setObject:sectionVC forKey:[intent sectionName]];
+      sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
     }
   }
 
@@ -218,10 +229,15 @@
     
     [self addChildViewController:sectionVC];
     [self.view addSubview:sectionVC.view];
-    
+    CGRect rect = sectionVC.view.frame;
+    rect.origin = CGPointMake(0, 0);
+    [sectionVC.view setFrame:rect];
+
 
     MCSectionViewController* oldSectionVC = currentSectionVC;
-
+    [oldSectionVC.currentViewVC resignFirstResponder];
+    [oldSectionVC resignFirstResponder];
+    
     // opResult becomes true when an animation is applied, then we don't need to call our other animation code
 //    BOOL opResult = [MCViewFactory applyTransitionToView:self.view transition:transitionStyle];
     BOOL opResult = [MCViewFactory applyTransitionFromView:currentSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
@@ -230,54 +246,54 @@
     }];
     
     
-    if (!opResult){ // if animation was not applied
-      [oldSectionVC.currentViewVC resignFirstResponder];
-      [oldSectionVC resignFirstResponder];
-
-      [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:[intent animationStyle] completion:^(BOOL finished) {
-        // these 4 lines are the same as below
-        [oldSectionVC.view removeFromSuperview];
+    if (!opResult && currentSectionVC.view != sectionVC.view){ // if animation was not applied
+      [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
         [oldSectionVC removeFromParentViewController];
       }];
     }
     
     NSAssert(self.view.subviews.count < 5, @"clearing the view stack");
     
-    currentSectionVC = sectionVC;
     
     // reset the animation style, don't animate the view if the section has already been animated
     transitionStyle = UIViewAnimationOptionTransitionNone;
   }
   
+  // load the view inside the section
+  MCViewController* currentViewVC = sectionVC.currentViewVC;
   
-  if (vc){ // load the view inside the section
-    MCViewController* currentViewVC = sectionVC.currentViewVC;
-    
-    // if the view controller is the same as before, don't load it again
-    if (currentViewVC != vc){
-      
+  // if the view controller is the same as before, don't load it again
+  if (currentViewVC != vc){
+    [currentViewVC resignFirstResponder];
+  
+    if (vc){
       [sectionVC addChildViewController:vc];
       [sectionVC.innerView addSubview:vc.view];
-      
-      // opResult becomes true when an animation is applied, then we don't need to call our other animation code
-//      BOOL opResult = [MCViewFactory applyTransitionToView:sectionVC.innerView transition:[intent animationStyle]];
+      CGRect rect = vc.view.frame;
+      rect.origin = CGPointMake(0, 0);
+      [vc.view setFrame:rect];
+
       BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:vc.view transition:transitionStyle completion:^{
-        [currentViewVC.view removeFromSuperview];
-        [currentViewVC removeFromParentViewController];
-      }];
-      [currentViewVC resignFirstResponder];
-      
-      if (currentViewVC.view != vc.view && !opResult){
-        [UIView transitionFromView:currentViewVC.view toView:vc.view duration:0.250 options:[intent animationStyle] completion:^(BOOL finished) {
           [currentViewVC.view removeFromSuperview];
+          [currentViewVC removeFromParentViewController];
+      }];
+
+      if (currentViewVC.view != vc.view && !opResult){
+        
+        [UIView transitionFromView:currentViewVC.view toView:vc.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
           [currentViewVC removeFromParentViewController];
         }];
       }
-     
-      NSAssert(sectionVC.innerView.subviews.count < 5, @"clearing the view stack");
+    } else { // no view controller
+      [currentViewVC.view removeFromSuperview];
+      [currentViewVC removeFromParentViewController];
     }
-    currentSectionVC.currentViewVC = vc;    
+  
+    NSAssert(sectionVC.innerView.subviews.count < 5, @"clearing the view stack");
   }
+    
+  currentSectionVC = sectionVC;
+  currentSectionVC.currentViewVC = vc;
 }
 
 -(void)clearView:(UIViewController*) view {

@@ -105,8 +105,7 @@ static MCViewFactory* _sharedFactory = nil;
 	} else if (value == ANIMATION_POP ) {
     transition = kCATransitionPush;
 		subTransition = kCATransitionFromLeft;
-  }
-  else {
+  } else {
     return NO;
   }
 
@@ -122,6 +121,7 @@ static MCViewFactory* _sharedFactory = nil;
       newView.center = finalPosition;
     } completion:^(BOOL finished) {
       completion();
+      oldView.center = finalPosition;
     }];
   }else{
     newView.center = leftPosition;
@@ -131,6 +131,7 @@ static MCViewFactory* _sharedFactory = nil;
       newView.center = finalPosition;
     } completion:^(BOOL finished) {
       completion();
+      oldView.center = finalPosition;
     }];
   }
   

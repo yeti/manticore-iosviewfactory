@@ -108,6 +108,8 @@ Custom values can be assigned to the transition, which are sent to the receving 
 
 The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
 
+The first time a view controller is shown from an intent, `onCreate` is fired once for non-GUI setup.
+
 ### View cache
 
 All view controllers are cached once the first time they are shown. They are not removed unless the client application calls:
@@ -147,3 +149,8 @@ The history stack can be completely flushed before a new section is shown, for e
 
     [[MCViewModel sharedModel] clearHistoryStack];
     [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];
+
+Known Issues
+------------
+
+* Incompatibility between `ANIMATION_*` and  `UIViewAnimationOptionTransition*` causes a black screen to show on some transitions. A workaround is to keep consistent transitions for a view.

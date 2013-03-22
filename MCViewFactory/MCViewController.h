@@ -17,7 +17,7 @@
 
 // When overriding these methods, the superclass's onResume and onPause must be called.
 
-// Called when the activity is first created. This is where you should do all of your normal static set up: create views, bind data to lists, etc.
+// Called when the activity is first created when fired from an MCIntent. This is where you should do all of your non-GUI setup. For GUI setup, override viewDidLoad.
 -(void)onCreate;
 
 // Called when the activity will start interacting with the user. At this point your activity is at the top of the activity stack, with user input going to it. Always followed by onPause().
