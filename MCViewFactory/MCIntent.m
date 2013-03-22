@@ -11,16 +11,16 @@
 @implementation MCIntent
 
 
++(id) intentWithSectionName: (NSString*)name
+{
+  MCIntent* newIntent = [MCIntent alloc];
+  return [newIntent initWithSectionName:name];
+}
+
 +(id) intentWithSectionName:(NSString*)name andSavedInstance:(NSMutableDictionary*)savedInstanceState
 {
   MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name andSavedInstance:savedInstanceState];
-}
-
-+(id) intentWithSectionName: (NSString*)name
-{
-  MCIntent* newIntent = [MCIntent alloc];
-  return [newIntent initWithSectionName:name ];
 }
 
 +(id) intentWithSectionName: (NSString*)name andAnimation:(UIViewAnimationOptions)animation
@@ -42,7 +42,6 @@
   MCIntent* newIntent = [[MCIntent alloc] initWithSectionName:sectionName viewName:viewName andAnimation:animation];
   return newIntent;
 }
-
 
 -(id) initWithSectionName: (NSString*)name
 {

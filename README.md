@@ -48,7 +48,7 @@ After the application has loaded, for example, in application:didFinishLaunching
 
     // Show the main view controller
 
-    AppModelIntent* intent = [AppModelIntent intentWithSectionName:@"YourSectionViewController"];
+    MCIntent* intent = [MCIntent intentWithSectionName:@"YourSectionViewController"];
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     [[MCViewModel sharedModel] setCurrentSection:intent];
 
@@ -71,7 +71,7 @@ All first-level view controllers should be suffixed with SectionViewController. 
 
     // ...
 
-    AppModelIntent* intent = [AppModelIntent intentWithSectionName:@"YourSectionViewController" andViewName:@"YourViewController"];
+    MCIntent* intent = [MCIntent intentWithSectionName:@"YourSectionViewController" andViewName:@"YourViewController"];
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     [[MCViewModel sharedModel] setCurrentSection:intent];
 
@@ -82,7 +82,7 @@ Intents and events
 
 A view transition happens when a new intent is assigned to `setCurrentSection:`.
 
-    AppModelIntent* intent = [AppModelIntent intentWithSectionName:@"YourSectionViewController"];
+    MCIntent* intent = [MCIntent intentWithSectionName:@"YourSectionViewController"];
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     [[MCViewModel sharedModel] setCurrentSection:intent];
 
@@ -94,9 +94,11 @@ Valid animation styles include all valid UIViewAnimations and the following cons
 * ANIMATION_PUSH
 * ANIMATION_POP
 
+`UIViewAnimation` run in 0.25 s and `ANIMATION_` run in 0.5 s. 
+
 Custom values can be assigned to the transition, which are sent to the receving view.
 
-    AppModelIntent* intent = ...;
+    MCIntent* intent = ...;
     [[intent savedInstanceState] setObject:@"someValue" forKey:@"yourKey"];
     [[intent savedInstanceState] setObject:@"anotherValue" forKey:@"anotherKey"];
     // ...
@@ -105,6 +107,12 @@ Custom values can be assigned to the transition, which are sent to the receving 
 ### Receiving an event
 
 The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
+
+### View cache
+
+All view controllers are cached once the first time they are shown. They are not removed unless the client application calls:
+
+    [[MCViewModel sharedModel] clearViewCache];
 
 View factory
 ------------
@@ -115,8 +123,27 @@ directly using:
 
     [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
 
-
-History Stack
+History stack
 -------------
 
-The history stack for a back button hasn't been implemented.
+A history stack for a back button can be configured:
+
+* No history stack, i.e., no back button using:
+    [MCViewModel sharedModel].stackSize = STACK_SIZE_DISABLED;
+
+* Infinite history stack:
+    [MCViewModel sharedModel].stackSize = STACK_SIZE_UNLIMITED;
+
+* Bounded history stack, which is useful if you know beforehand how many views you can go:
+    [MCViewModel sharedModel].stackSize = 5; // 1 current + 4 history
+
+Fire an intent with SECTION_LAST to travel back in the history stack:
+
+    if ([MCViewModel sharedModel].historyStack.count > 1){
+        [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:SECTION_LAST andAnimation:ANIMATION_POP]];
+    }
+
+The history stack can be completely flushed before a new section is shown, for example,:
+
+    [[MCViewModel sharedModel] clearHistoryStack];
+    [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];

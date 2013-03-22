@@ -16,6 +16,7 @@
   NSMutableDictionary *dictCacheView;
   MCErrorViewController* errorVC;
   MCSectionViewController* currentSectionVC;
+  MCIntent* activeIntent;
 }
 
 

@@ -10,6 +10,10 @@
 #import "MCMainViewController.h"
 #import <QuartzCore/QuartzCore.h>
 
+#define VIEW_BUILTIN_ERROR_NIB @"MCDefaultErrorViewController"
+#define VIEW_BUILTIN_MAIN_NIB @"MCDefaultMainViewController"
+
+// ref. http://stackoverflow.com/questions/923706/checking-if-a-nib-or-xib-file-exists
 #define AssertFileExists(path) NSAssert([[NSFileManager defaultManager] fileExistsAtPath:path], @"Cannot find the file: %@", path)
 #define AssertNibExists(file_name_string) AssertFileExists([[NSBundle mainBundle] pathForResource:file_name_string ofType:@"nib"])
 
@@ -65,7 +69,7 @@ static MCViewFactory* _sharedFactory = nil;
 -(UIViewController*)createViewController:(NSString*)sectionOrViewName{
   MCViewFactoryEntry* entry = [viewControllers objectForKey:sectionOrViewName];
   Class class = NSClassFromString(sectionOrViewName);
-  assert(class != nil);
+  NSAssert(class != nil, @"Class must exist");
   
   AssertNibExists(entry.nibName);
   UIViewController* vc = [[class alloc] initWithNibName:entry.nibName bundle:nil] ;
@@ -90,10 +94,9 @@ static MCViewFactory* _sharedFactory = nil;
   [viewControllers setObject:entry  forKey:sectionOrViewName];
 }
 
-
 // this method offers custom animations that are not provided by UIView, mainly the
 // slide left and right animations (no idea why Apple separated these animations)
-+(BOOL)applyTransitionToView:(UIView*)view transition:(int)value { // not the best place for this code but it'll work for now
++(BOOL)applyTransitionFromView:(UIView*)oldView toView:(UIView*)newView transition:(int)value completion:(void (^)(void))completion  { // not the best place for this code but it'll work for now
   NSString *transition = nil;
   NSString *subTransition = nil;
 	if (value == ANIMATION_PUSH ) {
@@ -106,17 +109,30 @@ static MCViewFactory* _sharedFactory = nil;
   else {
     return NO;
   }
+
+  CGPoint finalPosition = oldView.center;
+  CGPoint leftPosition = CGPointMake(-oldView.frame.size.width + finalPosition.x, finalPosition.y);
+  CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
   
-  if(transition != nil) {
-		// set up an animation for the transition between the views
-		CATransition *animation = [CATransition animation];
-		[animation setDuration:0.5];
-		[animation setType:transition];
-		[animation setSubtype:subTransition];
-		[animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
-		
-		[view.layer addAnimation:animation forKey:@"pageViewStack"];
-	}
+  if (value == ANIMATION_PUSH){
+    newView.center = rightPosition;
+    
+    [UIView animateWithDuration:0.5 animations:^{
+      oldView.center = leftPosition;
+      newView.center = finalPosition;
+    } completion:^(BOOL finished) {
+      completion();
+    }];
+  }else{
+    newView.center = leftPosition;
+    
+    [UIView animateWithDuration:0.5 animations:^{
+      oldView.center = rightPosition;
+      newView.center = finalPosition;
+    } completion:^(BOOL finished) {
+      completion();
+    }];
+  }
   
   return YES;
 }

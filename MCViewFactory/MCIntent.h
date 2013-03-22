@@ -27,13 +27,13 @@
 
 // Steps to use this object:
 //
-// 1.  AppModelIntent* intent = [AppModelIntent intentWithSectionName:SECTION_?? viewName:VIEW_??]
+// 1.  MCIntent* intent = [MCIntent intentWithSectionName:SECTION_?? viewName:VIEW_??]
 //     Create the intent object
 //
 // 2. [[intent getSavedInstance] setObject:?? forKey:@"viewSpecificKey"]
 //     Assign any/all view-specific instructions. Read header files for definition.
 //
-// 3. [[AppModelIntent] setCurrentSection:intent];
+// 3. [[MCViewModel] setCurrentSection:intent];
 //     Load the section.
 //
 
@@ -43,11 +43,11 @@
 // only used by the undo operation
 +(id) intentWithSectionName:(NSString*)name andSavedInstance:(NSMutableDictionary*)savedInstanceState;
 
-// most commonly called SECTION_ and VIEW_ pairing
-+(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName;
-
 // preferable animations are ANIMATION_NOTHING, ANIMATION_PUSH, ANIMATION_POP, UIViewAnimationOptionTransitionCrossDissolve
 +(id) intentWithSectionName: (NSString*)name andAnimation:(UIViewAnimationOptions)animation;
+
+// most commonly called SECTION_ and VIEW_ pairing
++(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName;
 
 // preferable animations are ANIMATION_NOTHING, ANIMATION_PUSH, ANIMATION_POP, UIViewAnimationOptionTransitionCrossDissolve
 +(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation;

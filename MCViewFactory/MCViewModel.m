@@ -12,6 +12,8 @@
 
 @synthesize errorDict;
 @synthesize currentSection;
+@synthesize historyStack;
+@synthesize stackSize;
 
 MCViewModel* _sharedModel;
 
@@ -26,10 +28,26 @@ MCViewModel* _sharedModel;
 	return nil;
 }
 
+-(id)init{
+  if (self = [super init]){
+    stackSize = 0;
+    [self clearHistoryStack];
+  }
+  
+  return self;
+}
+
+-(void)clearHistoryStack{
+    historyStack = [NSMutableArray arrayWithCapacity:stackSize];
+}
+
+-(void)clearViewCache{
+  [[NSNotificationCenter defaultCenter] postNotificationName:@"MCMainViewController_flushViewCache" object:self];
+}
+
 -(void) setErrorTitle:(NSString*) title andDescription:(NSString*) description
 {
   [self setErrorDict: [NSDictionary dictionaryWithObjects:@[title, description] forKeys:@[@"title", @"description"]]];
 }
-
 
 @end

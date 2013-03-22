@@ -10,6 +10,10 @@
 
 @implementation MCViewController
 
+-(void)onCreate{
+  
+}
+
 -(void)onResume:(MCIntent*)intent
 {
   
