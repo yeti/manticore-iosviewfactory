@@ -10,4 +10,4 @@
 #import "MCViewController.h"
 #import "MCViewFactory.h"
 #import "MCViewModel.h"
-#import "AppModelIntent.h"
+#import "MCIntent.h"

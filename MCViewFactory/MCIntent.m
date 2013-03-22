@@ -1,45 +1,45 @@
 //
-//  AppModelIntent.m
+//  MCIntent
 //  Manticore iOSViewFactory
 //
 //  Created by Richard Fung on 9/19/12.
 //  Copyright (c) 2013 Yeti LLC. All rights reserved.
 //
 
-#import "AppModelIntent.h"
+#import "MCIntent.h"
 
-@implementation AppModelIntent
+@implementation MCIntent
 
 
 +(id) intentWithSectionName:(NSString*)name andSavedInstance:(NSMutableDictionary*)savedInstanceState
 {
-  AppModelIntent* newIntent = [AppModelIntent alloc];
+  MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name andSavedInstance:savedInstanceState];
 }
 
 +(id) intentWithSectionName: (NSString*)name
 {
-  AppModelIntent* newIntent = [AppModelIntent alloc];
+  MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name ];
 }
 
 +(id) intentWithSectionName: (NSString*)name andAnimation:(UIViewAnimationOptions)animation
 {
-  AppModelIntent* newIntent = [AppModelIntent alloc];
+  MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name  andAnimation:animation];
 }
 
 
 +(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName
 {
-  AppModelIntent* newIntent = [AppModelIntent alloc];
+  MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:sectionName viewName:viewName];
 
 }
 
 +(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation
 {
-  AppModelIntent* newIntent = [[AppModelIntent alloc] initWithSectionName:sectionName viewName:viewName andAnimation:animation];
+  MCIntent* newIntent = [[MCIntent alloc] initWithSectionName:sectionName viewName:viewName andAnimation:animation];
   return newIntent;
 }
 

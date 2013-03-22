@@ -1,5 +1,5 @@
 //
-//  AppModelIntent.h
+//  MCIntent.h
 //  Manticore iOSViewFactory
 //
 //  Created by Richard Fung on 9/19/12.
@@ -19,7 +19,7 @@
 // http://developer.android.com/reference/android/app/Activity.html
 //
 // ViewControllers are "activities" that receive bundles
-@interface AppModelIntent : NSObject
+@interface MCIntent : NSObject
 {
   NSString              *strSectionName;
   NSMutableDictionary   *dictSavedInstanceState;

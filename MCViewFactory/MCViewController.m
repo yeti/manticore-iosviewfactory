@@ -10,12 +10,12 @@
 
 @implementation MCViewController
 
--(void)onResume:(AppModelIntent*)intent
+-(void)onResume:(MCIntent*)intent
 {
   
 }
 
--(void)onPause:(AppModelIntent*)intent
+-(void)onPause:(MCIntent*)intent
 {
   
 }

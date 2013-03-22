@@ -42,7 +42,7 @@
 }
 
 
--(void)onResume:(AppModelIntent *)intent{
+-(void)onResume:(MCIntent *)intent{
   [super onResume:intent];
   
   if (currentViewVC) {
@@ -52,7 +52,7 @@
   
 }
 
--(void)onPause:(AppModelIntent *)intent{
+-(void)onPause:(MCIntent *)intent{
   if (currentViewVC){
     [currentViewVC onPause:intent];
   }

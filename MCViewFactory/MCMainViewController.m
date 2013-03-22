@@ -91,7 +91,7 @@
   
 }
 
--(void)goToSection:(AppModelIntent*)intent{
+-(void)goToSection:(MCIntent*)intent{
   
   if (!dictCacheView)
   {

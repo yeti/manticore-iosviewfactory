@@ -7,13 +7,13 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "AppModelIntent.h"
+#import "MCIntent.h"
 
 @interface MCViewModel : NSObject
 
 // view
 @property(nonatomic,retain) NSDictionary* errorDict;
-@property(nonatomic, retain) AppModelIntent* currentSection;
+@property(nonatomic, retain) MCIntent* currentSection;
 
 +(MCViewModel*)sharedModel;
 
