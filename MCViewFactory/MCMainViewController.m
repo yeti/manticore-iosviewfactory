@@ -222,13 +222,14 @@
   [sectionVC onResume:intent];
 }
 
--(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)vc withIntent:(MCIntent*)intent{
+-(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent{
   int transitionStyle = [intent animationStyle];
   
   if (currentSectionVC != sectionVC){ // replace the section VC
     
     [self addChildViewController:sectionVC];
     [self.view addSubview:sectionVC.view];
+    sectionVC.view.hidden = NO;
     CGRect rect = sectionVC.view.frame;
     rect.origin = CGPointMake(0, 0);
     [sectionVC.view setFrame:rect];
@@ -248,6 +249,7 @@
     
     if (!opResult && currentSectionVC.view != sectionVC.view){ // if animation was not applied
       [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+        [oldSectionVC.view removeFromSuperview];
         [oldSectionVC removeFromParentViewController];
       }];
     }
@@ -263,24 +265,26 @@
   MCViewController* currentViewVC = sectionVC.currentViewVC;
   
   // if the view controller is the same as before, don't load it again
-  if (currentViewVC != vc){
+  if (currentViewVC != viewVC){
     [currentViewVC resignFirstResponder];
   
-    if (vc){
-      [sectionVC addChildViewController:vc];
-      [sectionVC.innerView addSubview:vc.view];
-      CGRect rect = vc.view.frame;
+    if (viewVC){
+      [sectionVC addChildViewController:viewVC];
+      [sectionVC.innerView addSubview:viewVC.view];
+      viewVC.view.hidden = NO;
+      CGRect rect = viewVC.view.frame;
       rect.origin = CGPointMake(0, 0);
-      [vc.view setFrame:rect];
+      [viewVC.view setFrame:rect];
 
-      BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:vc.view transition:transitionStyle completion:^{
+      BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
           [currentViewVC.view removeFromSuperview];
           [currentViewVC removeFromParentViewController];
       }];
 
-      if (currentViewVC.view != vc.view && !opResult){
+      if (currentViewVC.view != viewVC.view && !opResult){
         
-        [UIView transitionFromView:currentViewVC.view toView:vc.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+        [UIView transitionFromView:currentViewVC.view toView:viewVC.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+          [currentViewVC.view removeFromSuperview];
           [currentViewVC removeFromParentViewController];
         }];
       }
@@ -293,7 +297,7 @@
   }
     
   currentSectionVC = sectionVC;
-  currentSectionVC.currentViewVC = vc;
+  currentSectionVC.currentViewVC = viewVC;
 }
 
 -(void)clearView:(UIViewController*) view {
