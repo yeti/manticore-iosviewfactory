@@ -134,19 +134,24 @@ History stack
 A history stack for a back button can be configured:
 
 * No history stack, i.e., no back button using:
+
     [MCViewModel sharedModel].stackSize = STACK_SIZE_DISABLED;
 
 * Infinite history stack:
+
     [MCViewModel sharedModel].stackSize = STACK_SIZE_UNLIMITED;
 
 * Bounded history stack, which is useful if you know beforehand how many views you can go:
+
     [MCViewModel sharedModel].stackSize = 5; // 1 current + 4 history
+
 
 Fire an intent with SECTION_LAST to travel back in the history stack:
 
     if ([MCViewModel sharedModel].historyStack.count > 1){
         [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:SECTION_LAST andAnimation:ANIMATION_POP]];
     }
+
 
 The history stack can be completely flushed before a new section is shown, for example,:
 
