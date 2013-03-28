@@ -105,6 +105,7 @@
     // create the view controller
     vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:sectionOrViewName];
     NSAssert(vc != nil, @"VC should exist");
+    
     [vc onCreate];
     [dictCacheView setObject:vc forKey:sectionOrViewName];
   }
@@ -198,7 +199,7 @@
   
     // edge case: everything we are transitioning to is the same as the previous, need to create a new view
     if (sectionVC == currentSectionVC && vc == currentSectionVC.currentViewVC){
-      sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
+//      sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
       vc = (MCViewController*) [self forceLoadViewController:[intent viewName]];
     }
   }else{
@@ -232,6 +233,7 @@
     sectionVC.view.hidden = NO;
     CGRect rect = sectionVC.view.frame;
     rect.origin = CGPointMake(0, 0);
+    rect.size = self.view.frame.size;
     [sectionVC.view setFrame:rect];
 
 
