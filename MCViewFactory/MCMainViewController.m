@@ -276,6 +276,7 @@
       viewVC.view.hidden = NO;
       CGRect rect = viewVC.view.frame;
       rect.origin = CGPointMake(0, 0);
+      rect.size = sectionVC.innerView.bounds.size;
       [viewVC.view setFrame:rect];
 
       BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
