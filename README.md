@@ -1,14 +1,18 @@
-Manticore iOSViewFactory
-========================
+Manticore iOS View Factory
+==========================
 
 manticore-iosviewfactory is a view controller factory pattern for creating iOS applications.
 Designed with a two-level hierachical view controller structure for a tabbed application. 
-Inspired by intents on the Android platform.
+Inspired by [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
 
 Installation
 ------------
 
 Install from CocoaPods using this repository.
+
+Early releases of Manticore iOS View Factory must be installed directly from this github repository:
+
+    pod 'manticore-iosviewfactory', '~> 0.0.5', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Features
 --------
@@ -23,7 +27,7 @@ Basic Usage
 
     #import "ManticoreViewFactory.h"
 
-After the application has loaded, for example, in application:didFinishLaunchingWithOptions:
+After the application has loaded, for example, in `application:didFinishLaunchingWithOptions:`
 
     // Some standard window setup
 
@@ -60,8 +64,9 @@ Sections and Views
 Sections should correspond to a user interface's tabs and views should correspond to the pages
 seens within a tab. Prefixes and suffixes are not included in the schema definition.
 
-Sections can also be shown without any views if a single-level hierarchy, but to keep consistency
-a single view should be created for that section.
+Sections can also be shown without views in order to create single-level hierarchy, but it's a better design to create one section with multiple views.
+
+NOTE: I haven't tested a single-level hierarchy with all sections and no views.
 
 ### Two-Level Hierarchy
 
@@ -88,13 +93,14 @@ A view transition happens when a new intent is assigned to `setCurrentSection:`.
 
 Valid animation styles include all valid UIViewAnimations and the following constants, listed below:
 
-* UIViewAnimationOptionTransitionFlipFromLeft
-* UIViewAnimationOptionTransitionFlipFromRight
-* ANIMATION_NOTHING
-* ANIMATION_PUSH
-* ANIMATION_POP
+* `ANIMATION_NOTHING`
+* `ANIMATION_PUSH`
+* `ANIMATION_POP`
+* `UIViewAnimationOptionTransitionFlipFromLeft`
+* `UIViewAnimationOptionTransitionFlipFromRight`
+* ...
 
-`UIViewAnimation` run in 0.25 s and `ANIMATION_` run in 0.5 s. 
+`UIViewAnimation` run for 0.25 s and `ANIMATION_` run for 0.5 s. 
 
 
 ### Sending messages between views
@@ -108,6 +114,15 @@ Custom instructions can be assigned for the receiving view's `onResume:`.
     [[MCViewModel sharedModel] setCurrentSection:intent];
 
 The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
+
+When a view is restored, saved intent information can be loaded using:
+
+    -(void)onResume:(MCIntent *)intent {
+        NSObject* someValue = [intent.savedInstanceState objectForKey:@"yourKey"];
+        NSObject* anotherValue = [intent.savedInstanceState objectForKey:@"anotherKey"];
+
+        // ...
+    }    
 
 ### View state
 
@@ -128,6 +143,8 @@ directly using:
 
     [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
 
+`createViewController:` is a low-level function that does not provide caching, `onCreate`, `onResume`, and `onPause` events. This factory method can be used to load nested view controllers wherever and whenever you want.
+
 History stack
 -------------
 
@@ -135,25 +152,25 @@ A history stack for a back button can be configured:
 
 * No history stack, i.e., no back button using:
 
-    [MCViewModel sharedModel].stackSize = STACK_SIZE_DISABLED;
+    `[MCViewModel sharedModel].stackSize = STACK_SIZE_DISABLED;`
 
 * Infinite history stack:
 
-    [MCViewModel sharedModel].stackSize = STACK_SIZE_UNLIMITED;
+    `[MCViewModel sharedModel].stackSize = STACK_SIZE_UNLIMITED;`
 
 * Bounded history stack, which is useful if you know beforehand how many views you can go:
 
-    [MCViewModel sharedModel].stackSize = 5; // 1 current + 4 history
+    `[MCViewModel sharedModel].stackSize = 5; // 1 current + 4 history`
 
 
-Fire an intent with SECTION_LAST to travel back in the history stack:
+Fire an intent with `SECTION_LAST` to navigate back in the history stack:
 
     if ([MCViewModel sharedModel].historyStack.count > 1){
         [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:SECTION_LAST andAnimation:ANIMATION_POP]];
     }
 
 
-The history stack can be completely flushed before a new section is shown, for example,:
+The history stack can be completely flushed before a new section is shown, which you want to do every once in a while to reduce memory consumption:
 
     [[MCViewModel sharedModel] clearHistoryStack];
     [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];
