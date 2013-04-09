@@ -174,3 +174,14 @@ The history stack can be completely flushed before a new section is shown, which
 
     [[MCViewModel sharedModel] clearHistoryStack];
     [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];
+
+Known issues
+---------------------
+
+* CocoaPods and .xib files: "A signed resource has been added, modified, or deleted" error for CocoaPods with .xib 
+  files happens the second time when an app is run. 
+
+  This issue has been documented:
+  [https://github.com/CocoaPods/CocoaPods/issues/790](https://github.com/CocoaPods/CocoaPods/issues/790)
+
+  Add the script `rm -rf ${BUILT_PRODUCTS_DIR}` to the Pre-actions of the Build stage of your application's Scheme.

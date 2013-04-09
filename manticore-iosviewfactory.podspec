@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
-  s.name         = "manticore-iosviewfactory"
+  s.name         = "Manticore-iOSViewFactory"
   s.version      = "0.0.5"
-  s.summary      = "manticore-iosviewfactory is a view controller factory pattern for creating iOS applications, inspired from Android activity lifecycle."
+  s.summary      = "Manticore-iOSViewFactory is a view controller factory pattern for creating iOS applications, inspired from Android activity lifecycle."
   s.description  = <<-DESC
           Manticore iOS View Factory is a view controller factory pattern for creating iOS applications.
           Designed with a two-level hierachical view controller structure. 
