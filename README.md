@@ -105,6 +105,8 @@ Valid animation styles include all valid UIViewAnimations and the following cons
 
 ### Sending messages between views
 
+#### Sending
+
 Custom instructions can be assigned for the receiving view's `onResume:`.
 
     MCIntent* intent = ...;
@@ -112,6 +114,8 @@ Custom instructions can be assigned for the receiving view's `onResume:`.
     [[intent savedInstanceState] setObject:@"anotherValue" forKey:@"anotherKey"];
     // ...
     [[MCViewModel sharedModel] setCurrentSection:intent];
+
+#### Receiving
 
 The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
 
@@ -122,6 +126,9 @@ When a view is restored, saved intent information can be loaded using:
         NSObject* anotherValue = [intent.savedInstanceState objectForKey:@"anotherKey"];
 
         // ...
+
+        // ensure the following line is called, especially for MCSectionViewController
+        [super onResume:intent];
     }    
 
 ### View state
@@ -175,8 +182,21 @@ The history stack can be completely flushed before a new section is shown, which
     [[MCViewModel sharedModel] clearHistoryStack];
     [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];
 
+Showing error messages
+----------------------
+
+Manticore iOS View Factory comes with a built in error message view controller. To override the built in appearance and layout, 
+create MCErrorViewController.xib and assign its file owner to subclass MCErrorViewController. 
+
+Error messages are presented with a title label, message label, and button to dismiss the view controller. Error messages 
+are not placed on the history stack, thus do not interfere with the navigation of your application.
+
+To show error messages:
+
+    [[MCViewModel sharedModel] setErrorTitle:@"Some Title" andDescription:"@Your message here"];
+
 Known issues
----------------------
+------------
 
 * CocoaPods and .xib files: "A signed resource has been added, modified, or deleted" error for CocoaPods with .xib 
   files happens the second time when an app is run. 
