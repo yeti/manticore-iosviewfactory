@@ -195,6 +195,11 @@ To show error messages:
 
     [[MCViewModel sharedModel] setErrorTitle:@"Some Title" andDescription:"@Your message here"];
 
+Compiler settings
+-----------------
+
+Define `DEBUG` in compile settings to show debugger messages. `NSAssert` messages are unaffected by this setting.
+
 Known issues
 ------------
 

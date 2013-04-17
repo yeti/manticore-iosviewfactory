@@ -74,7 +74,9 @@ static MCViewFactory* _sharedFactory = nil;
   AssertNibExists(entry.nibName);
   UIViewController* vc = [[class alloc] initWithNibName:entry.nibName bundle:nil] ;
   
+#ifdef DEBUG
   NSLog(@"Created a view controller %@", vc);
+#endif
   return vc;
 }
 

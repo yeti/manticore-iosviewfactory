@@ -133,7 +133,7 @@
     return;
   }else if ([MCViewModel sharedModel].stackSize != STACK_SIZE_UNLIMITED){
     // bound the size 
-    NSAssert([MCViewModel sharedModel].stackSize > 0, @"valid stack size is defined");
+    NSAssert([MCViewModel sharedModel].stackSize > 0, @"stack size must be positive");
     
     if ([MCViewModel sharedModel].historyStack.count >= [MCViewModel sharedModel].stackSize  && [MCViewModel sharedModel].historyStack > 0){
       [[MCViewModel sharedModel].historyStack removeObjectAtIndex:0]; // remove the first object to keep the stack size bounded
@@ -145,7 +145,7 @@
 }
 
 -(MCIntent*)popHistoryStack{
-  NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something on the stack");
+  NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something should be on the stack");
   
   if ([MCViewModel sharedModel].historyStack.count > 0){
     [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
@@ -164,7 +164,21 @@
     
     // when  copying state values from the given intent, e.g., animation transition, to the old bundle
     MCIntent* previousIntent = [self popHistoryStack];
-    NSAssert(previousIntent != nil, @"Cannot pop an empty history stack. You can check for an empty history stack by inspecting [MCViewModel sharedModel].historyStack.count > 1");
+#ifdef DEBUG
+    if (previousIntent == nil){
+      if ([MCViewModel sharedModel].stackSize == STACK_SIZE_DISABLED){
+        NSLog(@"Cannot pop an empty stack because the stack size is set to STACK_SIZE_DISABLED. You should assign [MCViewModel sharedModel].stackSize on startup.");
+      }else if ([MCViewModel sharedModel].stackSize == STACK_SIZE_UNLIMITED){
+        NSLog(@"Navigating back in the history stack too many times. You can check for an empty history stack by inspecting [MCViewModel sharedModel].historyStack.count > 1");
+      }else if ([MCViewModel sharedModel].stackSize > 0){
+        NSLog(@"Cannot pop an empty stack. Perhaps your stack size = %d is too small? You should check [MCViewModel sharedModel].stackSize", [MCViewModel sharedModel].stackSize);
+      }else{
+        NSLog(@"Unexpected stack size. Please ticket this problem to the developers.");
+      }
+    }
+#endif
+    NSAssert(previousIntent != nil, @"Cannot pop an empty history stack.");
+
     if (previousIntent == nil){
       // default behaviour is to stop changing intents, the current intent is set to an improper state
       return nil;
