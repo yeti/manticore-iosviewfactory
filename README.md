@@ -210,3 +210,5 @@ Known issues
   [https://github.com/CocoaPods/CocoaPods/issues/790](https://github.com/CocoaPods/CocoaPods/issues/790)
 
   Add the script `rm -rf ${BUILT_PRODUCTS_DIR}` to the Pre-actions of the Build stage of your application's Scheme.
+
+* You'll implement `onResume` on a MCViewController but it doesn't get called. You probably overrode `onResume` on MCSectionViewController without calling `[super onResume:intent]`.
