@@ -11,9 +11,11 @@
 
 @interface MCViewController : UIViewController
 
-
 // Refer to http://developer.android.com/reference/android/app/Activity.html
 // for the lifecycle of a ViewController. (Yeah, I know, I'm copying Android intents.)
+
+// This tag is used for internal debugging purposes only. Do not use.
+@property () BOOL debugTag;
 
 // When overriding these methods, the superclass's onResume and onPause must be called.
 

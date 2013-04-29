@@ -226,15 +226,39 @@
   // save changes to the previous intent
   // automatically propagates onPause to its child view
   if (currentSectionVC){
+    // reset debug flags
+    currentSectionVC.debugTag = NO;
+    if (currentSectionVC.currentViewVC)
+      currentSectionVC.currentViewVC.debugTag = NO;
+    
     [currentSectionVC onPause:activeIntent];
+    
+#ifdef DEBUG
+    if (!currentSectionVC.debugTag)
+      NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onPause:intent] called", currentSectionVC);
+    if (currentSectionVC.currentViewVC && !currentSectionVC.currentViewVC.debugTag)
+      NSLog(@"Subclass %@ of MCViewController did not have its [super onPause:intent] called", currentSectionVC.currentViewVC);
+#endif
   }
 
   // switch the views
   [self loadNewSection:sectionVC andView:vc withIntent:intent];
   
+  // reset debug flags
+  currentSectionVC.debugTag = NO;
+  if (currentSectionVC.currentViewVC)
+    currentSectionVC.currentViewVC.debugTag = NO;
+
   // resume on the section will also resume the view
   activeIntent = intent;
   [sectionVC onResume:intent];
+  
+#ifdef DEBUG
+  if (!currentSectionVC.debugTag)
+    NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onResume:intent] called", currentSectionVC);
+  if (currentSectionVC.currentViewVC && !currentSectionVC.currentViewVC.debugTag)
+    NSLog(@"Subclass %@ of MCViewController did not have its [super onResume:intent] called", currentSectionVC.currentViewVC);
+#endif
 }
 
 -(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent{

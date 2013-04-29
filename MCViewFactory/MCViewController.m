@@ -10,18 +10,20 @@
 
 @implementation MCViewController
 
+@synthesize debugTag;
+
 -(void)onCreate{
   
 }
 
 -(void)onResume:(MCIntent*)intent
 {
-  
+  self.debugTag = YES;
 }
 
 -(void)onPause:(MCIntent*)intent
 {
-  
+  self.debugTag = YES;
 }
 
 @end
