@@ -267,12 +267,12 @@
   if (currentSectionVC != sectionVC){ // replace the section VC
     
     [self addChildViewController:sectionVC];
-    [self.view addSubview:sectionVC.view];
     sectionVC.view.hidden = NO;
     CGRect rect = sectionVC.view.frame;
     rect.origin = CGPointMake(0, 0);
     rect.size = self.view.frame.size;
     [sectionVC.view setFrame:rect];
+    [self.view addSubview:sectionVC.view];
 
 
     MCSectionViewController* oldSectionVC = currentSectionVC;
@@ -310,12 +310,12 @@
   
     if (viewVC){
       [sectionVC addChildViewController:viewVC];
-      [sectionVC.innerView addSubview:viewVC.view];
       viewVC.view.hidden = NO;
       CGRect rect = viewVC.view.frame;
       rect.origin = CGPointMake(0, 0);
       rect.size = sectionVC.innerView.bounds.size;
       [viewVC.view setFrame:rect];
+      [sectionVC.innerView addSubview:viewVC.view];
 
       BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
           [currentViewVC.view removeFromSuperview];
