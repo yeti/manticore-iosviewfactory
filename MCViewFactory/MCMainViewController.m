@@ -13,6 +13,20 @@
 #import "MCSectionViewController.h"
 #import "MCViewFactory.h"
 
+
+// this function taken from http://stackoverflow.com/questions/10330679/how-to-dispatch-on-main-queue-synchronously-without-a-deadlock
+void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
+{
+  if ([NSThread isMainThread])
+  {
+    block();
+  }
+  else
+  {
+    dispatch_sync(dispatch_get_main_queue(), block);
+  }
+}
+
 @interface MCMainViewController ()
 
 @end
@@ -29,7 +43,6 @@
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentSection" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
       [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flushViewCache:) name:@"MCMainViewController_flushViewCache" object:[MCViewModel sharedModel]]; // last parameter filters the response
-
     }
     return self;
 }
@@ -62,33 +75,35 @@
 // callback from the observer listener pattern
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
 	if ([keyPath isEqual:@"currentSection"]) {
-    [self goToSection:[MCViewModel sharedModel].currentSection];
+      manticore_runOnMainQueueWithoutDeadlocking(^{
+        [self goToSection:[MCViewModel sharedModel].currentSection];
+      });
+    
   } 
   else if ([keyPath isEqual:@"errorDict"]) {
   //NSDictionary *errorDict = [change objectForKey:NSKeyValueChangeNewKey];
   //[errorDict objectForKey: @"name"];
-    
-    if (!errorVC)
-      errorVC = (MCErrorViewController*) [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_ERROR];
-    
-    // remove from the previous
-    [errorVC.view removeFromSuperview];
-    [errorVC removeFromParentViewController];
-    
-    // set up
-    [errorVC loadLatestErrorMessage];
-
-    // add to the current
-    [errorVC.view setFrame:[self.view bounds]];
-    [self.view addSubview: errorVC.view];
-    
-    [currentSectionVC.currentViewVC.view resignFirstResponder];
-    [currentSectionVC.view resignFirstResponder];
-
-    
-    [errorVC becomeFirstResponder]; // make the error dialog the first responder
-    
-  
+      manticore_runOnMainQueueWithoutDeadlocking(^{
+        if (!errorVC)
+          errorVC = (MCErrorViewController*) [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_ERROR];
+        
+        // remove from the previous
+        [errorVC.view removeFromSuperview];
+        [errorVC removeFromParentViewController];
+        
+        // set up
+        [errorVC loadLatestErrorMessage];
+        
+        // add to the current
+        [errorVC.view setFrame:[self.view bounds]];
+        [self.view addSubview: errorVC.view];
+        
+        [currentSectionVC.currentViewVC.view resignFirstResponder];
+        [currentSectionVC.view resignFirstResponder];
+        
+        
+        [errorVC becomeFirstResponder]; // make the error dialog the first responder
+      });
   }
   
 }
@@ -231,6 +246,7 @@
     if (currentSectionVC.currentViewVC)
       currentSectionVC.currentViewVC.debugTag = NO;
     
+//    NSLog(@"Pause %@", activeIntent);
     [currentSectionVC onPause:activeIntent];
     
 #ifdef DEBUG
@@ -252,6 +268,7 @@
   // resume on the section will also resume the view
   activeIntent = intent;
   [sectionVC onResume:intent];
+//  NSLog(@"Resume %@", intent);
   
 #ifdef DEBUG
   if (!currentSectionVC.debugTag)
@@ -265,7 +282,7 @@
   int transitionStyle = [intent animationStyle];
   
   if (currentSectionVC != sectionVC){ // replace the section VC
-    
+//        NSLog(@"Different section");
     [self addChildViewController:sectionVC];
     sectionVC.view.hidden = NO;
     CGRect rect = sectionVC.view.frame;
@@ -282,15 +299,19 @@
     // opResult becomes true when an animation is applied, then we don't need to call our other animation code
 //    BOOL opResult = [MCViewFactory applyTransitionToView:self.view transition:transitionStyle];
     BOOL opResult = [MCViewFactory applyTransitionFromView:currentSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
-      [oldSectionVC.view removeFromSuperview];
-      [oldSectionVC removeFromParentViewController];
+      if (oldSectionVC != currentSectionVC){
+        [oldSectionVC.view removeFromSuperview];
+        [oldSectionVC removeFromParentViewController];
+      }
     }];
     
     
     if (!opResult && currentSectionVC.view != sectionVC.view){ // if animation was not applied
       [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
-        [oldSectionVC.view removeFromSuperview];
-        [oldSectionVC removeFromParentViewController];
+        if (oldSectionVC != currentSectionVC){
+          [oldSectionVC.view removeFromSuperview];
+          [oldSectionVC removeFromParentViewController];
+        }
       }];
     }
     
@@ -299,16 +320,21 @@
     
     // reset the animation style, don't animate the view if the section has already been animated
     transitionStyle = UIViewAnimationOptionTransitionNone;
+  }else{
+//    NSLog(@"Same section");
   }
   
   // load the view inside the section
-  MCViewController* currentViewVC = sectionVC.currentViewVC;
+  MCViewController* oldViewVC = sectionVC.currentViewVC;
   
   // if the view controller is the same as before, don't load it again
-  if (currentViewVC != viewVC){
-    [currentViewVC resignFirstResponder];
+  if (oldViewVC != viewVC){
+//        NSLog(@"different view");
+    [oldViewVC resignFirstResponder];
   
     if (viewVC){
+//          NSLog(@"attach view to section");
+      
       [sectionVC addChildViewController:viewVC];
       viewVC.view.hidden = NO;
       CGRect rect = viewVC.view.frame;
@@ -317,24 +343,33 @@
       [viewVC.view setFrame:rect];
       [sectionVC.innerView addSubview:viewVC.view];
 
-      BOOL opResult = [MCViewFactory applyTransitionFromView:currentViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
-          [currentViewVC.view removeFromSuperview];
-          [currentViewVC removeFromParentViewController];
+      BOOL opResult = [MCViewFactory applyTransitionFromView:oldViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
+        if (sectionVC.currentViewVC != oldViewVC){
+          [oldViewVC.view removeFromSuperview];
+          [oldViewVC removeFromParentViewController];
+        }
       }];
 
-      if (currentViewVC.view != viewVC.view && !opResult){
+      if (oldViewVC.view != viewVC.view && !opResult){
         
-        [UIView transitionFromView:currentViewVC.view toView:viewVC.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
-          [currentViewVC.view removeFromSuperview];
-          [currentViewVC removeFromParentViewController];
+        [UIView transitionFromView:oldViewVC.view toView:viewVC.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+          if (sectionVC.currentViewVC != oldViewVC){
+          [oldViewVC.view removeFromSuperview];
+          [oldViewVC removeFromParentViewController];
+          }
         }];
       }
     } else { // no view controller
-      [currentViewVC.view removeFromSuperview];
-      [currentViewVC removeFromParentViewController];
+//      NSLog(@"remove view from section");
+      
+      [oldViewVC.view removeFromSuperview];
+      [oldViewVC removeFromParentViewController];
     }
   
     NSAssert(sectionVC.innerView.subviews.count < 5, @"clearing the view stack");
+  }else{
+//    NSLog(@"same view");
+//    NSAssert([[sectionVC.innerView subviews] containsObject:oldViewVC.view], @"view should already be shown");
   }
     
   currentSectionVC = sectionVC;

@@ -15,9 +15,9 @@
 @interface MCViewModel : NSObject
 
 // view
-@property(nonatomic,retain) NSDictionary* errorDict;
-@property(nonatomic,retain) MCIntent* currentSection;
-@property(nonatomic,retain) NSMutableArray* historyStack; // saved intents on the history stack
+@property(atomic,retain) NSDictionary* errorDict;
+@property(atomic,retain) MCIntent* currentSection;
+@property(atomic,retain) NSMutableArray* historyStack; // saved intents on the history stack
 
 // valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0. Stack size includes the current view controller.
 @property() int stackSize;

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "Manticore-iOSViewFactory"
-  s.version      = "0.0.6"
+  s.version      = "0.0.7"
   s.summary      = "Manticore-iOSViewFactory is a view controller factory pattern for creating iOS applications, inspired from Android activity lifecycle."
   s.description  = <<-DESC
           Manticore iOS View Factory is a view controller factory pattern for creating iOS applications.
@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/YetiHQ/manticore-iosviewfactory"
   s.license      = 'MIT'
   s.author       = { "Richard Fung" => "richard@yetihq.com" }
-  s.source       = { :git => "https://github.com/YetiHQ/manticore-iosviewfactory.git", :tag => "0.0.6" }
+  s.source       = { :git => "https://github.com/YetiHQ/manticore-iosviewfactory.git", :tag => "0.0.7" }
   s.platform     = :ios
   s.source_files = 'MCViewFactory/**/*.{h,m,xib}', 'public/*.h'
   s.resources    = 'MCViewFactory/**/*.xib'

@@ -1,8 +1,8 @@
 Manticore iOS View Factory
 ==========================
 
-manticore-iosviewfactory is a view controller factory pattern for creating iOS applications.
-Designed with a two-level hierachical view controller structure for a tabbed application. 
+*manticore-iosviewfactory* is a view controller factory pattern for creating iOS applications.
+Designed with a two-level hierarchical view controller structure for a tabbed application. 
 Inspired by [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
 
 Installation
@@ -12,7 +12,7 @@ Install from CocoaPods using this repository.
 
 Early releases of Manticore iOS View Factory must be installed directly from this github repository:
 
-    pod 'manticore-iosviewfactory', '~> 0.0.5', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
+    pod 'manticore-iosviewfactory', '~> 0.0.7', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Features
 --------
@@ -20,7 +20,7 @@ Features
 Features included with this release:
 
 * Two-level hierarchical view controller
-* Intents to switch between views, similar to Android intents
+* Intents to switch between activities, similar to Android intents
 
 Basic Usage
 -----------
@@ -34,11 +34,11 @@ After the application has loaded, for example, in `application:didFinishLaunchin
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
 
-    // Register views
+    // Register activities
 
     MCViewFactory *factory = [MCViewFactory sharedFactory];
 
-    // the following two lines are optional. Built in views will show instead.
+    // the following two lines are optional. Built in activities will show instead.
     [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
     [factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
     [factory registerView:@"YourSectionViewController"];
@@ -61,16 +61,18 @@ After the application has loaded, for example, in `application:didFinishLaunchin
 Sections and Views
 ------------------
 
-Sections should correspond to a user interface's tabs and views should correspond to the pages
-seens within a tab. Prefixes and suffixes are not included in the schema definition.
+*Sections* should correspond to a user interface's tabs and *views* should correspond to the views inside a tab.
+ Prefixes and suffixes are not included in the schema definition.
 
-Sections can also be shown without views in order to create single-level hierarchy, but it's a better design to create one section with multiple views.
+Sections can also be shown without views in order to create single-level hierarchy,
+but it's a better design to create one section with multiple views.
 
 NOTE: I haven't tested a single-level hierarchy with all sections and no views.
 
 ### Two-Level Hierarchy
 
-All first-level view controllers should be suffixed with SectionViewController. Second-level view controllers can be registered and shown using the following snippets:
+All first-level view controllers should be suffixed with SectionViewController.
+ Second-level view controllers can be registered and shown using the following snippets:
 
     [[MCViewFactory sharedFactory] registerView:@"YourViewController"];
 
@@ -103,7 +105,7 @@ Valid animation styles include all valid UIViewAnimations and the following cons
 `UIViewAnimation` run for 0.25 s and `ANIMATION_` run for 0.5 s. 
 
 
-### Sending messages between views
+### Sending messages between activities
 
 #### Sending
 
@@ -117,7 +119,9 @@ Custom instructions can be assigned for the receiving view's `onResume:`.
 
 #### Receiving
 
-The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController when the intent is fired. If the section stays the same and the view changes, both the section and view receive `onResume` and `onPause` events.
+The events `onResume:` and `onPause:` are called on each MCViewController and MCSectionViewController
+when the intent is fired. If the section stays the same and the view changes, both the section and
+view receive `onResume` and `onPause` events.
 
 When a view is restored, saved intent information can be loaded using:
 
@@ -133,11 +137,14 @@ When a view is restored, saved intent information can be loaded using:
 
 ### View state
 
-View controllers are cached on first load and reused throughout the application lifetime. Application state should be loaded to `[intent savedInstanceState]` when `onResume:` is fired. Modified view controller state should be saved `onPause:` when using the history stack.
+View controllers are cached on first load and reused throughout the application lifetime.
+Application state should be loaded to `[intent savedInstanceState]` when `onResume:` is fired.
+Modified view controller state should be saved `onPause:` when using the history stack.
 
-The first time a view controller is shown from an intent, `onCreate` is fired once for non-GUI setup.
+The first time a view controller is loaded, `onCreate` is fired once for non-GUI setup. 
+This event, however, is skipped if the view controller is loaded directly from MCViewFactory.
 
-The cached view controllers can be flushed from memory with the following call:
+Cached view controllers can be flushed from memory with the following call:
 
     [[MCViewModel sharedModel] clearViewCache];
 
@@ -150,7 +157,8 @@ directly using:
 
     [[MCViewFactory sharedFactory] createViewController:@"MyViewController"]
 
-`createViewController:` is a low-level function that does not provide caching, `onCreate`, `onResume`, and `onPause` events. This factory method can be used to load nested view controllers wherever and whenever you want.
+`createViewController:` is a low-level function that does not provide caching, `onCreate`, 
+`onResume`, and `onPause` events. This factory method can be used to load nested view controllers wherever and whenever you want.
 
 History stack
 -------------
@@ -199,6 +207,17 @@ Compiler settings
 -----------------
 
 Define `DEBUG` in compile settings to show debugger messages. `NSAssert` messages are unaffected by this setting.
+
+Release notes
+-------------
+
+0.0.7: solve a bug where fast switching between activities would cause all activities to disappear
+
+0.0.6: debug messages are written to the console log to ensure `onPause:` and `onResume:` superclass are called
+
+0.0.5: sections and views are properly resized and fitted to the parent
+
+0.0.4: first stable release
 
 Known issues
 ------------

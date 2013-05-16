@@ -142,5 +142,8 @@
   [dictSavedInstanceState setObject:[NSNumber numberWithInt:animationStyle] forKey:@"animationStyle"];
 }
 
+-(NSString *)description{
+  return [NSString stringWithFormat:@"MCIntent section=%@, view=%@, dictionary=%@", self.sectionName, self.viewName, self.savedInstanceState];
+}
 
 @end
