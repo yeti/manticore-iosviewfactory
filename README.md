@@ -201,8 +201,8 @@ The basic *MCMainViewController* shows a black window. If you want to override t
 # When registering your views in code, add the following line:
     `[factory registerView:VIEW_BUILTIN_MAIN];`
 
-Showing error messages
-----------------------
+Error dialog box
+----------------
 
 Manticore iOS View Factory comes with a built in error message view controller. To override the built in appearance and layout, 
 create MCErrorViewController.xib and assign its file owner to subclass MCErrorViewController. 
@@ -240,7 +240,17 @@ Screen overlays are useful for giving instructions to the user. Screen overlays 
 
 The string `@"some-image"` should be an image that is compatible with `[UIImage imageNamed:@"some-image"]`.
 
-Multiple screen overlays are not supported. The most recently assigned screen overlay is the one shown.
+If the screen overlay is assigned several times, only the most recently overlay is shown.
+
+Displaying a sequence of overlays
+=================================
+
+Manticore iOS supports showing multiple screen overlays. When one overlay is dismissed, another overlay is shown until all of them are seen.
+
+    [MCViewModel sharedModel].screenOverlays = @[@"image-1", @"image-2", @"image-3"];
+
+iPhone 4 and iPhone 5 overlays
+==============================
 
 Manticore iOS supports different overlays for iPhone 4 and iPhone 5. iPhone 5 overlays use the same name with a special suffix `_5`, which is added automatically. You should name your images as such:
 
