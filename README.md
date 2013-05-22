@@ -195,10 +195,10 @@ Customizing the main window
 
 The basic *MCMainViewController* shows a black window. If you want to override this window, for example, to show an application logo, you are able to do so:
 
-# Create `MCMainViewController.xib` file in XCode.
-# Have the `xib` File Owner be subclass `MCMainViewController`.
-# Connect the UIView to the File Owner's `view`.
-# When registering your views in code, add the following line:
+1. Create `MCMainViewController.xib` file in XCode.
+2. Have the `xib` File Owner be subclass `MCMainViewController`.
+3. Connect the UIView to the File Owner's `view`.
+4. When registering your views in code, add the following line:
     `[factory registerView:VIEW_BUILTIN_MAIN];`
 
 Error dialog box
@@ -210,25 +210,23 @@ create MCErrorViewController.xib and assign its file owner to subclass MCErrorVi
 Error messages are presented with a title label, message label, and button to dismiss the view controller. Error messages 
 are not placed on the history stack, thus do not interfere with the navigation of your application.
 
-Showing error messages
-======================
+### Showing error messages
 
 To show error messages:
 
     [[MCViewModel sharedModel] setErrorTitle:@"Some Title" andDescription:"@Your message here"];
 
-Customizing the error window
-============================
+### Customizing the error window
 
 The basic *MCErrorViewController* shows a grey window with a title, message body, and Dismiss button. If you want to override this window with your own look and feel:
 
-# Create `MCErrorViewController.xib` file in XCode.
-# Have the `xib` File Owner be a subclass of `MCErrorViewController`.
-# Connect the UIView to the File Owner's `view`.
-# Add a UILabel and connect it to `titleLabel`
-# Add a UILabel and connect it to `descripLabel`
-# Add a UIButton and set its *Touch Up Inside* to `dismissError:` action.
-# When registering your views in code, add the following line:
+1. Create `MCErrorViewController.xib` file in XCode.
+2. Have the `xib` File Owner be a subclass of `MCErrorViewController`.
+3. Connect the UIView to the File Owner's `view`.
+4. Add a UILabel and connect it to `titleLabel`
+5. Add a UILabel and connect it to `descripLabel`
+6. Add a UIButton and set its *Touch Up Inside* to `dismissError:` action.
+7. When registering your views in code, add the following line:
     `[factory registerView:VIEW_BUILTIN_ERROR];`
 
 Screen overlays
@@ -242,15 +240,13 @@ The string `@"some-image"` should be an image that is compatible with `[UIImage 
 
 If the screen overlay is assigned several times, only the most recently overlay is shown.
 
-Displaying a sequence of overlays
-=================================
+### Displaying a sequence of overlays
 
 Manticore iOS supports showing multiple screen overlays. When one overlay is dismissed, another overlay is shown until all of them are seen.
 
     [MCViewModel sharedModel].screenOverlays = @[@"image-1", @"image-2", @"image-3"];
 
-iPhone 4 and iPhone 5 overlays
-==============================
+### iPhone 4 and iPhone 5 overlays
 
 Manticore iOS supports different overlays for iPhone 4 and iPhone 5. iPhone 5 overlays use the same name with a special suffix `_5`, which is added automatically. You should name your images as such:
 
