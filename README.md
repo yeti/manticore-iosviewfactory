@@ -195,10 +195,10 @@ Customizing the main window
 
 The basic *MCMainViewController* shows a black window. If you want to override this window, for example, to show an application logo, you are able to do so:
 
-# Create `MCMainViewController.xib` file in XCode.
-# Have the `xib` File Owner be subclass `MCMainViewController`.
-# Connect the UIView to the File Owner's `view`.
-# When registering your views in code, add the following line:
+1. Create `MCMainViewController.xib` file in XCode.
+2. Have the `xib` File Owner be subclass `MCMainViewController`.
+3. Connect the UIView to the File Owner's `view`.
+4. When registering your views in code, add the following line:
     `[factory registerView:VIEW_BUILTIN_MAIN];`
 
 Error dialog box
@@ -222,13 +222,13 @@ Customizing the error window
 
 The basic *MCErrorViewController* shows a grey window with a title, message body, and Dismiss button. If you want to override this window with your own look and feel:
 
-# Create `MCErrorViewController.xib` file in XCode.
-# Have the `xib` File Owner be a subclass of `MCErrorViewController`.
-# Connect the UIView to the File Owner's `view`.
-# Add a UILabel and connect it to `titleLabel`
-# Add a UILabel and connect it to `descripLabel`
-# Add a UIButton and set its *Touch Up Inside* to `dismissError:` action.
-# When registering your views in code, add the following line:
+1. Create `MCErrorViewController.xib` file in XCode.
+2. Have the `xib` File Owner be a subclass of `MCErrorViewController`.
+3. Connect the UIView to the File Owner's `view`.
+4. Add a UILabel and connect it to `titleLabel`
+5. Add a UILabel and connect it to `descripLabel`
+6. Add a UIButton and set its *Touch Up Inside* to `dismissError:` action.
+7. When registering your views in code, add the following line:
     `[factory registerView:VIEW_BUILTIN_ERROR];`
 
 Screen overlays
