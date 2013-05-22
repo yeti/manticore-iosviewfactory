@@ -14,6 +14,7 @@
 #import "MCViewFactory.h"
 
 
+
 // this function taken from http://stackoverflow.com/questions/10330679/how-to-dispatch-on-main-queue-synchronously-without-a-deadlock
 void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 {
@@ -42,6 +43,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
       // register to listeners on model changes
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentSection" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
+      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
       [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flushViewCache:) name:@"MCMainViewController_flushViewCache" object:[MCViewModel sharedModel]]; // last parameter filters the response
     }
     return self;
@@ -74,13 +76,13 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 // callback from the observer listener pattern
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if ([keyPath isEqual:@"currentSection"]) {
+	if ([keyPath isEqualToString:@"currentSection"]) {
       manticore_runOnMainQueueWithoutDeadlocking(^{
         [self goToSection:[MCViewModel sharedModel].currentSection];
       });
     
   } 
-  else if ([keyPath isEqual:@"errorDict"]) {
+  else if ([keyPath isEqualToString:@"errorDict"]) {
   //NSDictionary *errorDict = [change objectForKey:NSKeyValueChangeNewKey];
   //[errorDict objectForKey: @"name"];
       manticore_runOnMainQueueWithoutDeadlocking(^{
@@ -104,8 +106,65 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         
         [errorVC becomeFirstResponder]; // make the error dialog the first responder
       });
+  }else if ([keyPath isEqualToString:@"screenOverlay"]){
+    // if any previous overlays are present, they are removed from the view
+    if (screenOverlayButton){
+      [screenOverlayButton resignFirstResponder];
+      [screenOverlayButton removeFromSuperview];
+      screenOverlayButton = nil;
+    }
+    
+    // set up the geometry of the new screen overlay
+    CGRect rect = [self.view bounds];
+    screenOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    screenOverlayButton.frame = rect;
+    screenOverlayButton.contentMode = UIViewContentModeScaleToFill;
+    
+    // this code will load 2 images on iPhone 5, one for the small screen and another image for the large screen
+    
+    // automatically remove the .png/.PNG extension
+    NSString* overlayName = [MCViewModel sharedModel].screenOverlay;
+    if ([[overlayName pathExtension] compare:@"png" options:NSCaseInsensitiveSearch] == NSOrderedSame){
+      overlayName = [overlayName stringByDeletingPathExtension];
+    }
+    // load the image
+    UIImage* imgOverlay = [UIImage imageNamed:overlayName];
+    
+    // check screen dimensions
+    CGRect appFrame = [[UIScreen mainScreen] bounds];
+    if (appFrame.size.height >= MANTICORE_IOS5_SCREEN_SIZE) // add in the _5 to the filename, shouldn't append .png
+    {
+      // test for an iPhone 5 overlay. If available, use that overlay instead.
+      overlayName = [NSString stringWithFormat:@"%@%@", overlayName, MANTICORE_IOS5_OVERLAY_SUFFIX];
+      if ([UIImage imageNamed:overlayName]){
+        imgOverlay = [UIImage imageNamed:overlayName];
+      }
+    }
+    
+    // show the new overlay
+    if (imgOverlay){
+      [screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
+      [screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+      [self.view addSubview:screenOverlayButton ];
+      [self.view bringSubviewToFront:screenOverlayButton];
+      [screenOverlayButton becomeFirstResponder];
+    }else{
+#ifdef DEBUG
+      NSAssert(false, @"Screen overlay not found: %@", [MCViewModel sharedModel].screenOverlay);
+#endif
+    }
+    
+  }else{
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
   }
   
+}
+
+- (void)overlayButtonPressed:(id)sender{
+  // remove the button forever
+  [sender resignFirstResponder];
+  [sender removeFromSuperview];
+  screenOverlayButton = nil;
 }
 
 -(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName{

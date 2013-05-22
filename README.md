@@ -12,7 +12,7 @@ Install from CocoaPods using this repository.
 
 Early releases of Manticore iOS View Factory must be installed directly from this github repository:
 
-    pod 'manticore-iosviewfactory', '~> 0.0.7', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
+    pod 'manticore-iosviewfactory', '~> 0.0.8', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Features
 --------
@@ -190,6 +190,17 @@ The history stack can be completely flushed before a new section is shown, which
     [[MCViewModel sharedModel] clearHistoryStack];
     [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:...]];
 
+Customizing the main window
+---------------------------
+
+The basic *MCMainViewController* shows a black window. If you want to override this window, for example, to show an application logo, you are able to do so:
+
+# Create `MCMainViewController.xib` file in XCode.
+# Have the `xib` File Owner be subclass `MCMainViewController`.
+# Connect the UIView to the File Owner's `view`.
+# When registering your views in code, add the following line:
+    `[factory registerView:VIEW_BUILTIN_MAIN];`
+
 Showing error messages
 ----------------------
 
@@ -199,9 +210,42 @@ create MCErrorViewController.xib and assign its file owner to subclass MCErrorVi
 Error messages are presented with a title label, message label, and button to dismiss the view controller. Error messages 
 are not placed on the history stack, thus do not interfere with the navigation of your application.
 
+Showing error messages
+======================
+
 To show error messages:
 
     [[MCViewModel sharedModel] setErrorTitle:@"Some Title" andDescription:"@Your message here"];
+
+Customizing the error window
+============================
+
+The basic *MCErrorViewController* shows a grey window with a title, message body, and Dismiss button. If you want to override this window with your own look and feel:
+
+# Create `MCErrorViewController.xib` file in XCode.
+# Have the `xib` File Owner be a subclass of `MCErrorViewController`.
+# Connect the UIView to the File Owner's `view`.
+# Add a UILabel and connect it to `titleLabel`
+# Add a UILabel and connect it to `descripLabel`
+# Add a UIButton and set its *Touch Up Inside* to `dismissError:` action.
+# When registering your views in code, add the following line:
+    `[factory registerView:VIEW_BUILTIN_ERROR];`
+
+Screen overlays
+---------------
+
+Screen overlays are useful for giving instructions to the user. Screen overlays are implemented as UIImage resources embedded in the application. To show a screen overlay, call the following:
+
+    [MCViewModel sharedModel].screenOverlay = @"some-image";
+
+The string `@"some-image"` should be an image that is compatible with `[UIImage imageNamed:@"some-image"]`.
+
+Multiple screen overlays are not supported. The most recently assigned screen overlay is the one shown.
+
+Manticore iOS supports different overlays for iPhone 4 and iPhone 5. iPhone 5 overlays use the same name with a special suffix `_5`, which is added automatically. You should name your images as such:
+
+* `some-image.png`
+* `some-image_5.png`
 
 Compiler settings
 -----------------
@@ -210,6 +254,8 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
 
 Release notes
 -------------
+
+0.0.8: added screen overlays
 
 0.0.7: solve a bug where fast switching between activities would cause all activities to disappear
 

@@ -16,8 +16,9 @@
 
 // view
 @property(atomic,retain) NSDictionary* errorDict;
-@property(atomic,retain) MCIntent* currentSection;
-@property(atomic,retain) NSMutableArray* historyStack; // saved intents on the history stack
+@property(atomic,retain) MCIntent* currentSection; // rename to currentActivity
+@property(atomic,retain) NSString* screenOverlay; // name of the screen overlay, naming convention of UIImage, may be suffixed by _5, do not include extension
+@property(atomic,retain) NSMutableArray* historyStack; // saved intents on the history stack. Do not change this variable directly.
 
 // valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0. Stack size includes the current view controller.
 @property() int stackSize;

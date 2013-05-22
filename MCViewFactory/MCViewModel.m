@@ -13,6 +13,7 @@
 @synthesize errorDict;
 @synthesize currentSection;
 @synthesize historyStack;
+@synthesize screenOverlay;
 @synthesize stackSize;
 
 MCViewModel* _sharedModel;
