@@ -10,8 +10,6 @@
 #import "MCMainViewController.h"
 #import <QuartzCore/QuartzCore.h>
 
-#define VIEW_BUILTIN_ERROR_NIB @"MCDefaultErrorViewController"
-#define VIEW_BUILTIN_MAIN_NIB @"MCDefaultMainViewController"
 
 // ref. http://stackoverflow.com/questions/923706/checking-if-a-nib-or-xib-file-exists
 #define AssertFileExists(path) NSAssert([[NSFileManager defaultManager] fileExistsAtPath:path], @"Cannot find the file: %@", path)

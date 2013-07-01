@@ -8,9 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "MCIntent.h"
-
-#define STACK_SIZE_UNLIMITED 0
-#define STACK_SIZE_DISABLED 1
+#import "MCConstants.h"
 
 @interface MCViewModel : NSObject
 

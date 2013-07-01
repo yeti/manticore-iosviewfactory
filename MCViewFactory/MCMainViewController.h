@@ -10,10 +10,7 @@
 #import <UIKit/UIKit.h>
 #import "MCSectionViewController.h"
 #import "MCErrorViewController.h"
-
-#define MANTICORE_IOS5_SCREEN_SIZE 568
-#define MANTICORE_IOS5_OVERLAY_SUFFIX @"_5"
-#define MANTICORE_OVERLAY_ANIMATION_DURATION 0.2 // 200 ms
+#import "MCConstants.h"
 
 @interface MCMainViewController : MCViewController {
   

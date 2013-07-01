@@ -8,12 +8,7 @@
 // AppModelIntent is wired through AppModel and handled by MCMainViewController.
 
 #import <Foundation/Foundation.h>
-
-
-// open space in UIViewAnimationOptions
-#define ANIMATION_NOTHING     0 << 9
-#define ANIMATION_PUSH        1 << 10
-#define ANIMATION_POP         1 << 11
+#import "MCConstants.h"
 
 // see the architecture design from Android:
 // http://developer.android.com/reference/android/app/Activity.html
@@ -51,6 +46,12 @@
 
 // preferable animations are ANIMATION_NOTHING, ANIMATION_PUSH, ANIMATION_POP, UIViewAnimationOptionTransitionCrossDissolve
 +(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation;
+
+// intent for going to the last view, no animation
++(id) intentPreviousSection;
+
+// intent for going to the last view, any animation
++(id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation;
 
 // getters
 @property (nonatomic, retain, readonly) NSString* sectionName;

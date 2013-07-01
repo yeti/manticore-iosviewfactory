@@ -12,7 +12,7 @@ Install from CocoaPods using this repository.
 
 Early releases of Manticore iOS View Factory must be installed directly from this github repository:
 
-    pod 'manticore-iosviewfactory', '~> 0.0.8', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
+    pod 'manticore-iosviewfactory', '~> 0.0.9', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Features
 --------
@@ -178,12 +178,17 @@ A history stack for a back button can be configured:
     `[MCViewModel sharedModel].stackSize = 5; // 1 current + 4 history`
 
 
-Fire an intent with `SECTION_LAST` to navigate back in the history stack:
+Fire an intent to navigate back in the history stack:
 
     if ([MCViewModel sharedModel].historyStack.count > 1){
-        [[MCViewModel sharedModel] setCurrentSection:[MCIntent intentWithSectionName:SECTION_LAST andAnimation:ANIMATION_POP]];
+        [MCViewModel sharedModel].currentSection = [MCIntent intentPreviousSectionWithAnimation:ANIMATION_POP];
     }
 
+Or you can be more explicit by using `SECTION_LAST`:
+
+    if ([MCViewModel sharedModel].historyStack.count > 1){
+        [MCViewModel sharedModel].currentSection = [MCIntent intentWithSectionName:SECTION_LAST andAnimation:ANIMATION_POP];
+    }
 
 The history stack can be completely flushed before a new section is shown, which you want to do every once in a while to reduce memory consumption:
 
@@ -260,6 +265,8 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
 
 Release notes
 -------------
+
+0.0.9: added helper intent for navigating to the previous screen
 
 0.0.8: added screen overlays
 

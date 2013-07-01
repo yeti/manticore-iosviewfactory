@@ -7,13 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
-// special SECTION that goes to the previously seen section and view
-#define SECTION_LAST  @"__MCLastViewController__"
-
-// built in VIEWs that can be overriden by the user
-#define VIEW_BUILTIN_ERROR @"MCErrorViewController"
-#define VIEW_BUILTIN_MAIN @"MCMainViewController"
+#import "MCConstants.h"
 
 @interface MCViewFactory : NSObject{
   NSMutableDictionary* viewControllers;
