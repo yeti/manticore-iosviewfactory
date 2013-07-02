@@ -48,6 +48,12 @@ MCViewModel* _sharedModel;
 
 -(void) setErrorTitle:(NSString*) title andDescription:(NSString*) description
 {
+  if (title == nil)
+    title = @"";
+  
+  if (description == nil)
+    description = @"";
+  
   [self setErrorDict: [NSDictionary dictionaryWithObjects:@[title, description] forKeys:@[@"title", @"description"]]];
 }
 
