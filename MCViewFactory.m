@@ -57,8 +57,9 @@ static MCViewFactory* _sharedFactory = nil;
 -(id)init{
   if (self = [super init]){
     viewControllers = [NSMutableDictionary dictionaryWithCapacity:20];
-    [self registerView:VIEW_BUILTIN_MAIN andNibName:VIEW_BUILTIN_MAIN_NIB];
-    [self registerView:VIEW_BUILTIN_ERROR andNibName:VIEW_BUILTIN_ERROR_NIB];
+    //commenting these out for now in xcode 5 since we dont get the nibs easily
+    //[self registerView:VIEW_BUILTIN_MAIN andNibName:VIEW_BUILTIN_MAIN_NIB];
+    //[self registerView:VIEW_BUILTIN_ERROR andNibName:VIEW_BUILTIN_ERROR_NIB];
   }
   
   return self;

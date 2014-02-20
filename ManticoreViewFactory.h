@@ -1,4 +1,3 @@
-
 //  MCViewFactory.h
 //  Manticore iOSViewFactory
 //
