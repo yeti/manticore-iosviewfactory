@@ -250,26 +250,36 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   [[[MCViewModel sharedModel] historyStack] addObject:intent];
 }
 
--(MCIntent*)popHistoryStack{
+-(MCIntent*)popHistoryStack: (int) popNum{
   NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something should be on the stack");
   
-  if ([MCViewModel sharedModel].historyStack.count > 0){
-    [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
-    MCIntent* retIntent = [[MCViewModel sharedModel].historyStack lastObject]; // this is the previous view, we keep a ref to this
-    return retIntent;
+  MCIntent* retIntent = nil;
+  for (int i =0; i <= popNum; i++){
+    if ([MCViewModel sharedModel].historyStack.count > 0 && i != popNum){
+      [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
+      retIntent = [[MCViewModel sharedModel].historyStack lastObject];
+    } else {
+      return retIntent;
+    }
   }
   
   return nil; // nothing on the history stack
 }
 
 -(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent{
-  if ([[intent sectionName] isEqualToString:SECTION_LAST]){
+  if ([[intent sectionName] isEqualToString:SECTION_LAST] || [[intent sectionName] isEqualToString:SECTION_REWIND]){
     // but don't retain the SECTION or VIEW
     NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
     [savedState removeObjectForKey:@"viewName"]; // unusual design decision, sectionName is not saved in the savedState object
     
     // when  copying state values from the given intent, e.g., animation transition, to the old bundle
-    MCIntent* previousIntent = [self popHistoryStack];
+    int popNum = 1;
+    
+    //we can possibly add x2 x3 etc to this as well
+    if([[intent sectionName] isEqualToString:SECTION_REWIND]){
+      popNum = 2;
+    }
+    MCIntent* previousIntent = [self popHistoryStack: popNum];
 #ifdef DEBUG
     if (previousIntent == nil){
       if ([MCViewModel sharedModel].stackSize == STACK_SIZE_DISABLED){
