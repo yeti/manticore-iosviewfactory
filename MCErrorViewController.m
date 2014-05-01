@@ -14,7 +14,7 @@
 
 -(id)init{
   if(self=[super init]){
-    descripLabel.lineBreakMode = UILineBreakModeClip; //http://stackoverflow.com/questions/1054558/vertically-align-text-within-a-uilabel
+    descripLabel.lineBreakMode = NSLineBreakByClipping; //http://stackoverflow.com/questions/1054558/vertically-align-text-within-a-uilabel
   }
   return self;
 }
