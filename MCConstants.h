@@ -8,6 +8,7 @@
 
 // special SECTION that goes to the previously seen section and view
 #define SECTION_LAST  @"__MCLastViewController__"
+#define SECTION_REWIND  @"__MCRewindViewController__"
 
 // built in VIEWs that can be overriden by the user
 #define VIEW_BUILTIN_ERROR @"MCErrorViewController"
