@@ -380,6 +380,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 }
 
 -(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent{
+    
+    // this is where our animation comes from......
   int transitionStyle = [intent animationStyle];
   
   if (currentSectionVC != sectionVC){ // replace the section VC
@@ -398,7 +400,6 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     [oldSectionVC resignFirstResponder];
     
     // opResult becomes true when an animation is applied, then we don't need to call our other animation code
-//    BOOL opResult = [MCViewFactory applyTransitionToView:self.view transition:transitionStyle];
     BOOL opResult = [MCViewFactory applyTransitionFromView:currentSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
       if (oldSectionVC != currentSectionVC){
         [oldSectionVC.view removeFromSuperview];
@@ -406,8 +407,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
       }
     }];
     
-    
-    if (!opResult && currentSectionVC.view != sectionVC.view){ // if animation was not applied
+    // if animation was not applied
+    if (!opResult && currentSectionVC.view != sectionVC.view) {
+        
       [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
         if (oldSectionVC != currentSectionVC){
           [oldSectionVC.view removeFromSuperview];
@@ -453,7 +455,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
       if (oldViewVC.view != viewVC.view && !opResult){
         
-        [UIView transitionFromView:oldViewVC.view toView:viewVC.view duration:0.250 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+        [UIView transitionFromView:oldViewVC.view toView:viewVC.view duration:0.50 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
           if (sectionVC.currentViewVC != oldViewVC){
           [oldViewVC.view removeFromSuperview];
           [oldViewVC removeFromParentViewController];
