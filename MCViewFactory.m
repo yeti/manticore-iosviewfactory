@@ -97,46 +97,65 @@ static MCViewFactory* _sharedFactory = nil;
 
 // this method offers custom animations that are not provided by UIView, mainly the
 // slide left and right animations (no idea why Apple separated these animations)
-+(BOOL)applyTransitionFromView:(UIView*)oldView toView:(UIView*)newView transition:(int)value completion:(void (^)(void))completion  { // not the best place for this code but it'll work for now
-  NSString *transition = nil;
-  NSString *subTransition = nil;
-	if (value == ANIMATION_PUSH ) {
-    transition = kCATransitionPush;
-		subTransition = kCATransitionFromRight;
-	} else if (value == ANIMATION_POP ) {
-    transition = kCATransitionPush;
-		subTransition = kCATransitionFromLeft;
-  } else {
-    return NO;
-  }
++(BOOL)applyTransitionFromView:(UIView*)oldView toView:(UIView*)newView transition:(int)value completion:(void (^)(void))completion  {
+    
+    // not the best place for this code but it'll work for now
+    
+    CGPoint finalPosition = oldView.center;
+    CGPoint leftPosition = CGPointMake(-oldView.frame.size.width + finalPosition.x, finalPosition.y);
+    CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
+    
+    CGPoint topPosition = CGPointMake(finalPosition.x, finalPosition.y + oldView.frame.size.height);
+    CGPoint bottomPosition = CGPointMake(finalPosition.x, -oldView.frame.size.height + finalPosition.y);
 
-  CGPoint finalPosition = oldView.center;
-  CGPoint leftPosition = CGPointMake(-oldView.frame.size.width + finalPosition.x, finalPosition.y);
-  CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
-  
-  if (value == ANIMATION_PUSH){
-    newView.center = rightPosition;
-    
-    [UIView animateWithDuration:0.5 animations:^{
-      oldView.center = leftPosition;
-      newView.center = finalPosition;
-    } completion:^(BOOL finished) {
-      completion();
-      oldView.center = finalPosition;
-    }];
-  }else{
-    newView.center = leftPosition;
-    
-    [UIView animateWithDuration:0.5 animations:^{
-      oldView.center = rightPosition;
-      newView.center = finalPosition;
-    } completion:^(BOOL finished) {
-      completion();
-      oldView.center = finalPosition;
-    }];
-  }
-  
-  return YES;
+    if (value == ANIMATION_PUSH){
+        newView.center = rightPosition;
+
+        [UIView animateWithDuration:0.5 animations:^{
+            oldView.center = leftPosition;
+            newView.center = finalPosition;
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
+    } else if (value == ANIMATION_POP) {
+        
+        newView.center = leftPosition;
+
+        [UIView animateWithDuration:0.5 animations:^{
+            oldView.center = rightPosition;
+            newView.center = finalPosition;
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
+    } else if (value == ANIMATION_SLIDE_FROM_BOTTOM) {
+        newView.center = topPosition;
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            oldView.center = bottomPosition;
+            newView.center = finalPosition;
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
+    } else if (value == ANIMATION_SLIDE_FROM_TOP) {
+        newView.center = bottomPosition;
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            oldView.center = topPosition;
+            newView.center = finalPosition;
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
+    } else {
+        return NO;
+    }
 }
 
 

@@ -18,9 +18,13 @@
 #define VIEW_BUILTIN_MAIN_NIB @"MCDefaultMainViewController"
 
 // open space in UIViewAnimationOptions
+// Bitwise left operator, why? Powers of two.......
 #define ANIMATION_NOTHING     0 << 9
 #define ANIMATION_PUSH        1 << 10
 #define ANIMATION_POP         1 << 11
+//exprimental
+#define ANIMATION_SLIDE_FROM_BOTTOM   1 << 12
+#define ANIMATION_SLIDE_FROM_TOP      1 << 13
 
 // iOS 5 support
 #define MANTICORE_IOS5_SCREEN_SIZE 568
