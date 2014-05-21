@@ -1,55 +1,50 @@
-//
-//  MCIntent
-//  Manticore iOSViewFactory
-//
-//  Created by Richard Fung on 9/19/12.
-//  Copyright (c) 2013 Yeti LLC. All rights reserved.
-//
+/*
+ MCIntent.m
+ Manticore iOSViewFactory
+ 
+ Created by Richard Fung on 9/19/12.
+ Copyright (c) 2013 Yeti LLC. All rights reserved.
+
+ */
 
 #import "MCIntent.h"
 
 @implementation MCIntent
 
 
-+(id) intentWithSectionName: (NSString*)name
-{
++(id) intentWithSectionName: (NSString*)name {
   MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name];
 }
 
-+(id) intentWithSectionName:(NSString*)name andSavedInstance:(NSMutableDictionary*)savedInstanceState
-{
++(id) intentWithSectionName:(NSString*)name andSavedInstance:(NSMutableDictionary*)savedInstanceState {
   MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name andSavedInstance:savedInstanceState];
 }
 
-+(id) intentWithSectionName: (NSString*)name andAnimation:(UIViewAnimationOptions)animation
-{
++(id) intentWithSectionName: (NSString*)name andAnimation:(UIViewAnimationOptions)animation {
   MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:name  andAnimation:animation];
 }
 
 
-+(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName
-{
++(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName {
   MCIntent* newIntent = [MCIntent alloc];
   return [newIntent initWithSectionName:sectionName viewName:viewName];
-
 }
 
-+(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation
-{
++(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation {
   MCIntent* newIntent = [[MCIntent alloc] initWithSectionName:sectionName viewName:viewName andAnimation:animation];
   return newIntent;
 }
 
 // intent for going to the last view, no animation
-+(id) intentPreviousSection{
++ (id) intentPreviousSection{
   return [MCIntent intentWithSectionName:SECTION_LAST];
 }
 
 // intent for going to the last view, any animation
-+(id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation{
++ (id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation{
   return [MCIntent intentWithSectionName:SECTION_LAST andAnimation:animation];
 }
 
@@ -145,7 +140,7 @@
   }
 }
 
--(void)setAnimationStyle:(UIViewAnimationOptions)animationStyle{
+- (void) setAnimationStyle: (UIViewAnimationOptions) animationStyle{
   if (!dictSavedInstanceState){
     dictSavedInstanceState = [NSMutableDictionary dictionaryWithCapacity:10];
   }
@@ -153,7 +148,7 @@
   [dictSavedInstanceState setObject:[NSNumber numberWithInt:animationStyle] forKey:@"animationStyle"];
 }
 
--(NSString *)description{
+-(NSString *) description {
   return [NSString stringWithFormat:@"MCIntent section=%@, view=%@, dictionary=%@", self.sectionName, self.viewName, self.savedInstanceState];
 }
 

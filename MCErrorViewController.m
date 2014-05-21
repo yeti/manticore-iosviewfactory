@@ -29,17 +29,15 @@
 
 #pragma mark - View lifecycle
 
-- (void)viewDidLoad
-{
+// Do any additional setup after loading the view from its nib.
+- (void)viewDidLoad {
   [super viewDidLoad];
-  // Do any additional setup after loading the view from its nib.
 }
 
-- (void)viewDidUnload
-{
+// Release any retained subviews of the main view.
+// e.g. self.myOutlet = nil;
+- (void) viewDidUnload {
   [super viewDidUnload];
-  // Release any retained subviews of the main view.
-  // e.g. self.myOutlet = nil;
 }
 
 -(void)loadLatestErrorMessage{
@@ -48,7 +46,7 @@
   NSString *title = [errorDict objectForKey: @"title"];
   NSString *description = [errorDict objectForKey: @"description"];
   
-  //RKRestKitError
+  /* RKRestKitError */
   if ([errorDict objectForKey:@"error"]){
     NSError* error = [errorDict objectForKey:@"error"];
     NSArray* arrErrorCodes = [NSArray arrayWithObjects:@"Unknown error",
@@ -72,15 +70,12 @@
 }
 
 -(IBAction) reportError:(id)sender{
-//  TFLog(@"Error reported from %@: %@", titleLabel.text, descripLabel.text);
-  
   [self.view removeFromSuperview];
-  
 }
 
+/* Return YES for supported orientations */
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-  // Return YES for supported orientations
   return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
