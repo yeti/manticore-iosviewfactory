@@ -18,7 +18,8 @@
 
 MCViewModel* _sharedModel;
 
-+(MCViewModel*)sharedModel
+/* Singleton */
++ (MCViewModel*) sharedModel
 {
 	@synchronized([MCViewModel class])
 	{
@@ -29,7 +30,7 @@ MCViewModel* _sharedModel;
 	return nil;
 }
 
--(id)init{
+- (id) init {
   if (self = [super init]){
     stackSize = 0;
     [self clearHistoryStack];
@@ -38,11 +39,11 @@ MCViewModel* _sharedModel;
   return self;
 }
 
--(void)clearHistoryStack{
+- (void) clearHistoryStack{
     historyStack = [NSMutableArray arrayWithCapacity:stackSize];
 }
 
--(void)clearViewCache{
+- (void) clearViewCache {
   [[NSNotificationCenter defaultCenter] postNotificationName:@"MCMainViewController_flushViewCache" object:self];
 }
 

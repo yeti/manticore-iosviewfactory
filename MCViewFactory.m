@@ -57,15 +57,14 @@ static MCViewFactory* _sharedFactory = nil;
 -(id)init{
   if (self = [super init]){
     viewControllers = [NSMutableDictionary dictionaryWithCapacity:20];
-    //commenting these out for now in xcode 5 since we dont get the nibs easily
-    //[self registerView:VIEW_BUILTIN_MAIN andNibName:VIEW_BUILTIN_MAIN_NIB];
-    //[self registerView:VIEW_BUILTIN_ERROR andNibName:VIEW_BUILTIN_ERROR_NIB];
   }
   
   return self;
 }
 
 -(UIViewController*)createViewController:(NSString*)sectionOrViewName{
+  
+
   MCViewFactoryEntry* entry = [viewControllers objectForKey:sectionOrViewName];
   Class class = NSClassFromString(sectionOrViewName);
   NSAssert(class != nil, @"Class must exist");
@@ -76,6 +75,7 @@ static MCViewFactory* _sharedFactory = nil;
 #ifdef DEBUG
   NSLog(@"Created a view controller %@", vc);
 #endif
+    
   return vc;
 }
 
@@ -87,13 +87,15 @@ static MCViewFactory* _sharedFactory = nil;
   [viewControllers setObject:entry  forKey:sectionOrViewName];
 }
 
--(void)registerView:(NSString*)sectionOrViewName andNibName:(NSString*)nibName {
-  MCViewFactoryEntry* entry = [[MCViewFactoryEntry alloc] init];
-  entry.nibName = nibName;
-  entry.className = sectionOrViewName;
-  
-  [viewControllers setObject:entry  forKey:sectionOrViewName];
-}
+// DO WE NEED THIS ANYMORE ?????
+
+//-(void)registerView:(NSString*)sectionOrViewName andNibName:(NSString*)nibName {
+//  MCViewFactoryEntry* entry = [[MCViewFactoryEntry alloc] init];
+//  entry.nibName = nibName;
+//  entry.className = sectionOrViewName;
+//  
+//  [viewControllers setObject:entry  forKey:sectionOrViewName];
+//}
 
 // this method offers custom animations that are not provided by UIView, mainly the
 // slide left and right animations (no idea why Apple separated these animations)
@@ -105,15 +107,22 @@ static MCViewFactory* _sharedFactory = nil;
     CGPoint leftPosition = CGPointMake(-oldView.frame.size.width + finalPosition.x, finalPosition.y);
     CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
     
+    CGPoint closerLeftPosition = CGPointMake(finalPosition.x - 40, finalPosition.y);
+
+    
     CGPoint topPosition = CGPointMake(finalPosition.x, finalPosition.y + oldView.frame.size.height);
     CGPoint bottomPosition = CGPointMake(finalPosition.x, -oldView.frame.size.height + finalPosition.y);
 
     if (value == ANIMATION_PUSH){
         newView.center = rightPosition;
+        oldView.center = finalPosition;
+        
+
 
         [UIView animateWithDuration:0.5 animations:^{
-            oldView.center = leftPosition;
             newView.center = finalPosition;
+            oldView.center = closerLeftPosition;
+            
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
@@ -121,32 +130,34 @@ static MCViewFactory* _sharedFactory = nil;
         return YES;
     } else if (value == ANIMATION_POP) {
         
-        newView.center = leftPosition;
+        newView.center = closerLeftPosition;
+        oldView.center = finalPosition;
 
-        [UIView animateWithDuration:0.5 animations:^{
-            oldView.center = rightPosition;
+        [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionShowHideTransitionViews animations:^{
             newView.center = finalPosition;
+            oldView.center = rightPosition;
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
         }];
         return YES;
+        
     } else if (value == ANIMATION_SLIDE_FROM_BOTTOM) {
+        
         newView.center = topPosition;
         
         [UIView animateWithDuration:0.5 animations:^{
-            oldView.center = bottomPosition;
             newView.center = finalPosition;
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
         }];
         return YES;
+        
     } else if (value == ANIMATION_SLIDE_FROM_TOP) {
         newView.center = bottomPosition;
         
         [UIView animateWithDuration:0.5 animations:^{
-            oldView.center = topPosition;
             newView.center = finalPosition;
         } completion:^(BOOL finished) {
             completion();
