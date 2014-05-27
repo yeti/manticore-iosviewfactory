@@ -31,7 +31,7 @@
 #define MANTICORE_IOS5_OVERLAY_SUFFIX @"_5"
 
 // shared settings
-#define MANTICORE_OVERLAY_ANIMATION_DURATION 0.2 // 200 ms
+#define MANTICORE_OVERLAY_ANIMATION_DURATION 0.5 // 200 ms
 
 // stack size special values
 #define STACK_SIZE_UNLIMITED 0

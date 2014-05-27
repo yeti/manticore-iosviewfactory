@@ -252,6 +252,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   // show the new overlay
   if (imgOverlay){
     [screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
+      screenOverlayButton.adjustsImageWhenHighlighted = NO;
+
     [screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     if (![self.view.subviews containsObject:screenOverlayButton]){
       screenOverlayButton.alpha = 0.0;
