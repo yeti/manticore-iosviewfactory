@@ -22,6 +22,10 @@
 #define ANIMATION_NOTHING     0 << 9
 #define ANIMATION_PUSH        1 << 10
 #define ANIMATION_POP         1 << 11
+#define ANIMATION_POP_LEFT         1 << 14
+#define ANIMATION_PUSH_LEFT        1 << 15
+
+
 //exprimental
 #define ANIMATION_SLIDE_FROM_BOTTOM   1 << 12
 #define ANIMATION_SLIDE_FROM_TOP      1 << 13
