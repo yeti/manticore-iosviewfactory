@@ -464,9 +464,14 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
             rect.size = sectionVC.innerView.bounds.size;
             
             [viewVC.view setFrame:rect];
+            NSLog(@"%i", transitionStyle);
             
-            if (transitionStyle != ANIMATION_POP) [sectionVC.innerView addSubview:viewVC.view];
-            else [sectionVC.innerView insertSubview:viewVC.view belowSubview:oldViewVC.view];
+            if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT) {
+                
+                [sectionVC.innerView insertSubview:viewVC.view belowSubview:oldViewVC.view];
+            } else {
+                [sectionVC.innerView addSubview:viewVC.view];
+            }
             
             
             BOOL opResult = [MCViewFactory applyTransitionFromView:oldViewVC.view toView:viewVC.view transition:transitionStyle completion:^{

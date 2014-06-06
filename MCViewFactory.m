@@ -108,6 +108,7 @@ static MCViewFactory* _sharedFactory = nil;
     CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
     
     CGPoint closerLeftPosition = CGPointMake(finalPosition.x - 40, finalPosition.y);
+    CGPoint closerRightPosition = CGPointMake(finalPosition.x + 40, finalPosition.y);
 
     
     CGPoint topPosition = CGPointMake(finalPosition.x, finalPosition.y + oldView.frame.size.height);
@@ -128,6 +129,21 @@ static MCViewFactory* _sharedFactory = nil;
             oldView.center = finalPosition;
         }];
         return YES;
+    } else if (value == ANIMATION_PUSH_LEFT){
+        newView.center = leftPosition;
+        oldView.center = finalPosition;
+        
+        
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            newView.center = finalPosition;
+            oldView.center = closerRightPosition;
+            
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
     } else if (value == ANIMATION_POP) {
         
         newView.center = closerLeftPosition;
@@ -136,6 +152,20 @@ static MCViewFactory* _sharedFactory = nil;
         [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionShowHideTransitionViews animations:^{
             newView.center = finalPosition;
             oldView.center = rightPosition;
+        } completion:^(BOOL finished) {
+            completion();
+            oldView.center = finalPosition;
+        }];
+        return YES;
+        
+    } else if (value == ANIMATION_POP_LEFT) {
+        
+        newView.center = closerRightPosition;
+        oldView.center = finalPosition;
+        
+        [UIView animateWithDuration:0.5 delay:0.0 options:UIViewAnimationOptionShowHideTransitionViews animations:^{
+            newView.center = finalPosition;
+            oldView.center = leftPosition;
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
