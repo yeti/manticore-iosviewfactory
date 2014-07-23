@@ -11,7 +11,7 @@
 @implementation MCViewModel
 
 @synthesize errorDict;
-@synthesize currentSection;
+@synthesize currentIntent;
 @synthesize historyStack;
 @synthesize screenOverlay;
 @synthesize stackSize;
@@ -55,6 +55,10 @@ MCViewModel* _sharedModel;
     description = @"";
   
   [self setErrorDict: [NSDictionary dictionaryWithObjects:@[title, description] forKeys:@[@"title", @"description"]]];
+}
+
+-(void) processIntent:(MCIntent *)newCurrentIntent {
+  [self setCurrentIntent: newCurrentIntent];
 }
 
 @end

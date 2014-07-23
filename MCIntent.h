@@ -28,7 +28,7 @@
 // 2. [[intent getSavedInstance] setObject:?? forKey:@"viewSpecificKey"]
 //     Assign any/all view-specific instructions. Read header files for definition.
 //
-// 3. [[MCViewModel] setCurrentSection:intent];
+// 3. [[MCViewModel sharedModel] processIntent:intent];
 //     Load the section.
 //
 
@@ -48,10 +48,13 @@
 +(id) intentWithSectionName:(NSString*)sectionName andViewName:(NSString*)viewName andAnimation:(UIViewAnimationOptions)animation;
 
 // intent for going to the last view, no animation
-+(id) intentPreviousSection;
++(id) intentPreviousIntent;
 
 // intent for going to the last view, any animation
-+(id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation;
++(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation;
+
+// intent for going to a specific view in the history stack
++(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum;
 
 // getters
 @property (nonatomic, retain, readonly) NSString* sectionName;

@@ -41,7 +41,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     if (self) {
         // Custom initialization
       // register to listeners on model changes
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentSection" options: NSKeyValueObservingOptionNew context: nil];
+      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentIntent" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlays" options: NSKeyValueObservingOptionNew context: nil];
@@ -77,9 +77,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 // callback from the observer listener pattern
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if ([keyPath isEqualToString:@"currentSection"]) {
+	if ([keyPath isEqualToString:@"currentIntent"]) {
       manticore_runOnMainQueueWithoutDeadlocking(^{
-        [self goToSection:[MCViewModel sharedModel].currentSection];
+        [self goToIntent:[MCViewModel sharedModel].currentIntent];
       });
     
   } 
@@ -266,6 +266,24 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   return nil; // nothing on the history stack
 }
 
+-(MCIntent*)getHistoricalIntentAtIndex: (int) historyNum{
+  NSAssert([MCViewModel sharedModel].historyStack.count > historyNum, @"something should be on the stack");
+  
+  MCIntent* retIntent = nil;
+  
+  retIntent = [[MCViewModel sharedModel].historyStack objectAtIndex: historyNum];
+  
+  [[MCViewModel sharedModel].historyStack removeObjectAtIndex:historyNum];
+  
+//  NSRange r;
+//  r.location = historyNum;
+//  r.length = [[MCViewModel sharedModel].historyStack count] - historyNum;
+//  
+//  [[MCViewModel sharedModel].historyStack removeObjectsInRange: r];
+  
+  return retIntent;
+}
+
 -(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent{
   if ([[intent sectionName] isEqualToString:SECTION_LAST] || [[intent sectionName] isEqualToString:SECTION_REWIND]){
     // but don't retain the SECTION or VIEW
@@ -303,7 +321,35 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     // replace the intent on the history stack
     [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
     return previousIntent;
-  }else{
+    
+  } else if([[intent sectionName] isEqualToString:SECTION_HISTORICAL]) {
+    
+    //we need to load the intent that is in this position in our history stack
+    NSNumber *historyNum = [intent.savedInstanceState objectForKey: @"historyNumber"];
+    
+    MCIntent* previousIntent = [self getHistoricalIntentAtIndex: [historyNum intValue]];
+    
+    if (previousIntent == nil){
+      // default behaviour is to stop changing intents, the current intent is set to an improper state
+      return nil;
+    }
+    
+    //removing the view name makes it so that the observer method doesnt try to create a new one
+    
+    NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
+    [savedState removeObjectForKey:@"viewName"];
+    [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
+    
+    [self pushToHistoryStack:previousIntent];
+    
+    //this process will grab the historical view, put it on top of the stack and remove it from its old location
+    //the potential situation could happen where we want to jump back and remove everything since then
+    //in that case we should create another similar workflow using a seperate SECTION constant called REVERT or something
+    //maybe this workflow could change to REUSE
+    
+    return previousIntent;
+    
+  } else {
     // build the history stack
     [self pushToHistoryStack:intent];
   }
@@ -311,7 +357,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   return intent;
 }
 
--(void)goToSection:(MCIntent*)intent{
+-(void)goToIntent:(MCIntent*)intent{
   // handle the history stack
   intent = [self loadIntentAndHandleHistoryStack:intent];
   if (!intent)
@@ -323,6 +369,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   NSAssert([sectionVC isKindOfClass:[MCSectionViewController class]], @"sections should be subclasses of MCSectionViewController");
   
   MCViewController* vc = nil;
+  //viewName is removed if we are going back to a previous intent
   if ([intent viewName]){
     vc = (MCViewController*) [self loadOrCreateViewController:[intent viewName]];
     NSAssert([vc isKindOfClass:[MCViewController class]], @"views should be subclasses of MCViewController");
