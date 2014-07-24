@@ -42,7 +42,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentSection" options: NSKeyValueObservingOptionNew context: nil];
+        // Custom initialization
+      // register to listeners on model changes
+      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentIntent" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
       [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlays" options: NSKeyValueObservingOptionNew context: nil];
@@ -79,9 +81,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
  This method directs to the appropriate responders for the changes made to the MCViewModel
  */
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if ([keyPath isEqualToString:@"currentSection"]) {
+	if ([keyPath isEqualToString:@"currentIntent"]) {
       manticore_runOnMainQueueWithoutDeadlocking(^{
-        [self goToSection:[MCViewModel sharedModel].currentSection];
+        [self goToIntent:[MCViewModel sharedModel].currentIntent];
       });
     
   } else if ([keyPath isEqualToString:@"errorDict"]) {
@@ -132,9 +134,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 # pragma mark - Callback methods
 
 /*
- Callback method for transitioning to a new section
+ Callback method for transitioning to a new intent
  */
-- (void) goToSection: (MCIntent*) intent {
+- (void) goToIntent: (MCIntent*) intent {
     
     /* handle the history stack */
     intent = [self loadIntentAndHandleHistoryStack:intent];
@@ -317,6 +319,33 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         // replace the intent on the history stack
         [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
         return previousIntent;
+    } else if([[intent sectionName] isEqualToString:SECTION_HISTORICAL]) {
+      
+      //we need to load the intent that is in this position in our history stack
+      NSNumber *historyNum = [intent.savedInstanceState objectForKey: @"historyNumber"];
+      
+      MCIntent* previousIntent = [self getHistoricalIntentAtIndex: [historyNum intValue]];
+      
+      if (previousIntent == nil){
+        // default behaviour is to stop changing intents, the current intent is set to an improper state
+        return nil;
+      }
+      
+      //removing the view name makes it so that the observer method doesnt try to create a new one
+      
+      NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
+      [savedState removeObjectForKey:@"viewName"];
+      [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
+      
+      [self pushToHistoryStack:previousIntent];
+      
+      //this process will grab the historical view, put it on top of the stack and remove it from its old location
+      //the potential situation could happen where we want to jump back and remove everything since then
+      //in that case we should create another similar workflow using a seperate SECTION constant called REVERT or something
+      //maybe this workflow could change to REUSE
+      
+      return previousIntent;
+      
     } else {
         // build the history stack
         [self pushToHistoryStack:intent];
@@ -357,153 +386,171 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 }
 
 -(MCIntent*)popHistoryStack: (int) popNum{
-    NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something should be on the stack");
-    
-    MCIntent* retIntent = nil;
-    for (int i =0; i <= popNum; i++){
-        if ([MCViewModel sharedModel].historyStack.count > 0 && i != popNum){
-            [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
-            retIntent = [[MCViewModel sharedModel].historyStack lastObject];
-        } else {
-            return retIntent;
-        }
+  NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something should be on the stack");
+  
+  MCIntent* retIntent = nil;
+  for (int i =0; i <= popNum; i++){
+    if ([MCViewModel sharedModel].historyStack.count > 0 && i != popNum){
+      [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
+      retIntent = [[MCViewModel sharedModel].historyStack lastObject];
+    } else {
+      return retIntent;
     }
-    
-    return nil; // nothing on the history stack
+  }
+  
+  return nil; // nothing on the history stack
+}
+
+-(MCIntent*)getHistoricalIntentAtIndex: (int) historyNum{
+  NSAssert([MCViewModel sharedModel].historyStack.count > historyNum, @"something should be on the stack");
+  
+  MCIntent* retIntent = nil;
+  
+  retIntent = [[MCViewModel sharedModel].historyStack objectAtIndex: historyNum];
+  
+  [[MCViewModel sharedModel].historyStack removeObjectAtIndex:historyNum];
+  
+//  NSRange r;
+//  r.location = historyNum;
+//  r.length = [[MCViewModel sharedModel].historyStack count] - historyNum;
+//  
+//  [[MCViewModel sharedModel].historyStack removeObjectsInRange: r];
+  
+  return retIntent;
 }
 
 
 -(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName{
-    // create global view cache if it doesn't already exist
-    if (!dictCacheView){
-        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
-    }
+  // create global view cache if it doesn't already exist
+  if (!dictCacheView){
+    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+  }
+
+  // test for existence
+  MCViewController* vc = [dictCacheView objectForKey:sectionOrViewName];
+  if (vc == nil){
+    // create the view controller
+    vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:sectionOrViewName];
+    NSAssert(vc != nil, @"VC should exist");
     
-    // test for existence
-    MCViewController* vc = [dictCacheView objectForKey:sectionOrViewName];
-    if (vc == nil){
-        // create the view controller
-        vc = (MCViewController*) [[MCViewFactory sharedFactory] createViewController:sectionOrViewName];
-        NSAssert(vc != nil, @"VC should exist");
-        
-        [vc onCreate];
-        [dictCacheView setObject:vc forKey:sectionOrViewName];
-    }
-    
-    return vc;
+    [vc onCreate];
+    [dictCacheView setObject:vc forKey:sectionOrViewName];
+  }
+
+  return vc;
+  
 }
 
 -(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent{
+  
+  int transitionStyle = [intent animationStyle];
+  
+  // replace the section VC
+  if (currentSectionVC != sectionVC ){
     
-    int transitionStyle = [intent animationStyle];
     
-    // replace the section VC
-    if (currentSectionVC != sectionVC ){
-        
-        
-        [self addChildViewController:sectionVC];
-        
-        sectionVC.view.hidden = NO;
-        CGRect rect = sectionVC.view.frame;
-        rect.origin = CGPointMake(0, 0);
-        rect.size = self.view.frame.size;
-        [sectionVC.view setFrame:rect];
-        [self.view addSubview:sectionVC.view];
-        
-        
-        MCSectionViewController* oldSectionVC = currentSectionVC;
-        [oldSectionVC.currentViewVC resignFirstResponder];
-        [oldSectionVC resignFirstResponder];
-        
-        // opResult becomes true when an animation is applied, then we don't need to call our other animation code
-        BOOL opResult = [MCViewFactory applyTransitionFromView:currentSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
-            
-            if (oldSectionVC != currentSectionVC) {
-                [oldSectionVC.view removeFromSuperview];
-                [oldSectionVC removeFromParentViewController];
-            }
-        }];
-        
-        // if animation was not applied
-        if (!opResult && currentSectionVC.view != sectionVC.view) {
-            
-            [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
-                if (oldSectionVC != currentSectionVC){
-                    [oldSectionVC.view removeFromSuperview];
-                    [oldSectionVC removeFromParentViewController];
-                }
-            }];
+    [self addChildViewController:sectionVC];
+    
+    sectionVC.view.hidden = NO;
+    CGRect rect = sectionVC.view.frame;
+    rect.origin = CGPointMake(0, 0);
+    rect.size = self.view.frame.size;
+    [sectionVC.view setFrame:rect];
+    [self.view addSubview:sectionVC.view];
+    
+    
+    MCSectionViewController* oldSectionVC = currentSectionVC;
+    [oldSectionVC.currentViewVC resignFirstResponder];
+    [oldSectionVC resignFirstResponder];
+    
+    // opResult becomes true when an animation is applied, then we don't need to call our other animation code
+    BOOL opResult = [MCViewFactory applyTransitionFromView:currentSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
+      
+      if (oldSectionVC != currentSectionVC) {
+        [oldSectionVC.view removeFromSuperview];
+        [oldSectionVC removeFromParentViewController];
+      }
+    }];
+    
+    // if animation was not applied
+    if (!opResult && currentSectionVC.view != sectionVC.view) {
+      
+      [UIView transitionFromView:currentSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+        if (oldSectionVC != currentSectionVC){
+          [oldSectionVC.view removeFromSuperview];
+          [oldSectionVC removeFromParentViewController];
         }
-        
-        NSAssert(self.view.subviews.count < 5, @"clearing the view stack");
-        
-        
-        // reset the animation style, don't animate the view if the section has already been animated
-        transitionStyle = UIViewAnimationOptionTransitionNone;
+      }];
     }
     
-    // load the view inside the section
-    MCViewController* oldViewVC = sectionVC.currentViewVC;
+    NSAssert(self.view.subviews.count < 5, @"clearing the view stack");
     
-    // if the view controller is the same as before, don't load it again
-    if (oldViewVC != viewVC){
+    
+    // reset the animation style, don't animate the view if the section has already been animated
+    transitionStyle = UIViewAnimationOptionTransitionNone;
+  }
+  
+  // load the view inside the section
+  MCViewController* oldViewVC = sectionVC.currentViewVC;
+  
+  // if the view controller is the same as before, don't load it again
+  if (oldViewVC != viewVC){
+    
+    [oldViewVC resignFirstResponder];
+    
+    if (viewVC) {
+      
+      // THis is where I need to messa round.
+      
+      [sectionVC addChildViewController:viewVC];
+      
+      viewVC.view.hidden = NO;
+      
+      CGRect rect = viewVC.view.frame;
+      rect.origin = CGPointMake(0, 0);
+      
+      rect.size = sectionVC.innerView.bounds.size;
+      
+      [viewVC.view setFrame:rect];
+      NSLog(@"%i", transitionStyle);
+      
+      if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT) {
         
-        [oldViewVC resignFirstResponder];
+        [sectionVC.innerView insertSubview:viewVC.view belowSubview:oldViewVC.view];
+      } else {
+        [sectionVC.innerView addSubview:viewVC.view];
+      }
+      
+      
+      BOOL opResult = [MCViewFactory applyTransitionFromView:oldViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
         
-        if (viewVC) {
-            
-            // THis is where I need to messa round.
-            
-            [sectionVC addChildViewController:viewVC];
-            
-            viewVC.view.hidden = NO;
-            
-            CGRect rect = viewVC.view.frame;
-            rect.origin = CGPointMake(0, 0);
-            
-            rect.size = sectionVC.innerView.bounds.size;
-            
-            [viewVC.view setFrame:rect];
-            NSLog(@"%i", transitionStyle);
-            
-            if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT) {
-                
-                [sectionVC.innerView insertSubview:viewVC.view belowSubview:oldViewVC.view];
-            } else {
-                [sectionVC.innerView addSubview:viewVC.view];
-            }
-            
-            
-            BOOL opResult = [MCViewFactory applyTransitionFromView:oldViewVC.view toView:viewVC.view transition:transitionStyle completion:^{
-                
-                if (sectionVC.currentViewVC != oldViewVC) {
-                    [oldViewVC.view removeFromSuperview];
-                    [oldViewVC removeFromParentViewController];
-                }
-            }];
-            
-            if (oldViewVC.view != viewVC.view && !opResult){
-                
-                [UIView transitionFromView:oldViewVC.view toView:viewVC.view duration:0.50 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
-                    if (sectionVC.currentViewVC != oldViewVC){
-                        [oldViewVC.view removeFromSuperview];
-                        [oldViewVC removeFromParentViewController];
-                    }
-                }];
-            }
-        } else { // no view controller
-            
+        if (sectionVC.currentViewVC != oldViewVC) {
+          [oldViewVC.view removeFromSuperview];
+          [oldViewVC removeFromParentViewController];
+        }
+      }];
+      
+      if (oldViewVC.view != viewVC.view && !opResult){
+        
+        [UIView transitionFromView:oldViewVC.view toView:viewVC.view duration:0.50 options:(transitionStyle |UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
+          if (sectionVC.currentViewVC != oldViewVC){
             [oldViewVC.view removeFromSuperview];
             [oldViewVC removeFromParentViewController];
-        }
-        
-        NSAssert(sectionVC.innerView.subviews.count < 5, @"clearing the view stack");
+          }
+        }];
+      }
+    } else { // no view controller
+      
+      [oldViewVC.view removeFromSuperview];
+      [oldViewVC removeFromParentViewController];
     }
     
-    currentSectionVC = sectionVC;
-    currentSectionVC.currentViewVC = viewVC;
+    NSAssert(sectionVC.innerView.subviews.count < 5, @"clearing the view stack");
+  }
+  
+  currentSectionVC = sectionVC;
+  currentSectionVC.currentViewVC = viewVC;
 }
-
 
 - (void)overlayButtonPressed:(id)sender{
   NSMutableArray* newArray = [NSMutableArray arrayWithArray:screenOverlaySlideshow];
@@ -512,6 +559,5 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   screenOverlaySlideshow = newArray;
   [self overlaySlideshow:newArray];
 }
-
 
 @end

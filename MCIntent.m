@@ -39,13 +39,27 @@
 }
 
 // intent for going to the last view, no animation
-+ (id) intentPreviousSection{
++(id) intentPreviousIntent{
   return [MCIntent intentWithSectionName:SECTION_LAST];
 }
 
 // intent for going to the last view, any animation
-+ (id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation{
++(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation{
   return [MCIntent intentWithSectionName:SECTION_LAST andAnimation:animation];
+}
+
+// intent for going to a specific view in the history stack
++(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum {
+  MCIntent *intent = [MCIntent intentWithSectionName: SECTION_HISTORICAL];
+  [intent.savedInstanceState setObject: historyNum forKey: @"historyNumber"];
+  return intent;
+}
+
+// intent for going to a specific view in the history stack
++(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum andAnimation: (UIViewAnimationOptions)animation {
+  MCIntent *intent = [MCIntent intentWithSectionName: SECTION_HISTORICAL andAnimation: animation];
+  [intent.savedInstanceState setObject: historyNum forKey: @"historyNumber"];
+  return intent;
 }
 
 

@@ -10,6 +10,10 @@
 #define SECTION_LAST  @"__MCLastViewController__"
 #define SECTION_REWIND  @"__MCRewindViewController__"
 
+//special SECTION that will trigger scanning for "historyNumber"
+//meant to retrieve a specific intent in the history stack
+#define SECTION_HISTORICAL  @"__MCHistoricalViewController__"
+
 // built in VIEWs that can be overriden by the user
 #define VIEW_BUILTIN_ERROR @"MCErrorViewController"
 #define VIEW_BUILTIN_MAIN @"MCMainViewController"

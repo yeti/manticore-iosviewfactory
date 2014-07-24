@@ -14,7 +14,7 @@
 
 // view
 @property(atomic,retain) NSDictionary* errorDict;
-@property(atomic,retain) MCIntent* currentSection; // rename to currentActivity
+@property(atomic,retain) MCIntent* currentIntent;
 @property(atomic,retain) NSString* screenOverlay; // name of the screen overlay, naming convention of UIImage, may be suffixed by _5, do not include extension
 @property(atomic,retain) NSArray* screenOverlays; // array of strings that name the screen overlays to show in succession, may be suffixed by _5, do not include extension
 @property(atomic,retain) NSMutableArray* historyStack; // saved intents on the history stack. Do not change this variable directly.
@@ -32,5 +32,11 @@
 
 // show an error message above the main window, does not affect the history stack
 - (void) setErrorTitle:(NSString*) title andDescription:(NSString*) description;
+
+//setting of the currentIntent needs to be wrapped in case we ever need to make changes again
+-(void) processIntent:(MCIntent *)newCurrentIntent;
+
+//please use processIntent: (MCIntent *) newCurrentIntent instead of this method
+-(void) setCurrentSection: (MCIntent *)currentIntent __deprecated;
 
 @end
