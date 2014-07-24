@@ -44,12 +44,12 @@
 }
 
 // intent for going to the last view, no animation
-+(id) intentPreviousSection{
++(id) intentPreviousIntent{
   return [MCIntent intentWithSectionName:SECTION_LAST];
 }
 
 // intent for going to the last view, any animation
-+(id) intentPreviousSectionWithAnimation:(UIViewAnimationOptions)animation{
++(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation{
   return [MCIntent intentWithSectionName:SECTION_LAST andAnimation:animation];
 }
 
