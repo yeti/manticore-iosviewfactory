@@ -1,7 +1,5 @@
-#Manticore iOS View Manager
-
-
-        
+#Welcome to Manticore iOS View Manager
+    
         
         
 ##Overview
@@ -14,7 +12,7 @@ Designed with a two-level hierarchical view controller structure, *manticore-ios
 ##Installation
 
 
-Installation with CocoaPods is really easy. Add this line to your Podfile then `pod install` :
+Installation using CocoaPods is really easy. Add this line to your Podfile then `pod install` :
 
     pod 'MCViewFactory', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
@@ -22,48 +20,63 @@ Early releases of Manticore iOS View Factory must be installed directly from thi
 
     pod 'manticore-iosviewfactory', '~> X.X.X', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
+If you do not wish to use CocoaPods, you may always do it the old way and copy the files into your project.     
+Manticore-iosviewmanager does not require any external dependencies.
+
 ##Features
 
 Features included with this release:
 
 * Two-level hierarchical view controller
-* Easily transmit data between views
 * Intents to switch between activities, similar to Android intents
+* Easy transmission of data between Manticore View-Controllers
+* Static navigation between view-controllers using their names
+* Dynamic navigation between view-controllers using the history stack
 
 ##Basic Usage
 
+###### Import
+Importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
+
     #import "ManticoreViewFactory.h"
 
-After the application has loaded, for example, in `application:didFinishLaunchingWithOptions:`
+###### Initialize
+You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere like in `application:didFinishLaunchingWithOptions:` :
 
-    // Some standard window setup
-
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.backgroundColor = [UIColor whiteColor];
-
-    // Register activities
-
+    // Get the MCViewFactory singleton instance :   
     MCViewFactory *factory = [MCViewFactory sharedFactory];
+
+    // Register all your Manticore View-Controllers
+    [factory registerView:@"YourMCSectionViewControllers"];
+    [factory registerView:@"YourMCViewControllers"];
 
     // the following two lines are optional. Built in activities will show instead.
     [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
     [factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
-    [factory registerView:@"YourSectionViewController"];
+    
 
-    // Run the factory methods
+###### Assign Manticore's MainViewController to your application's window
+
+    // Still in "application:didFinishLaunchingWithOptions:" here
 
     UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
     [self.window setRootViewController:mainVC];
     [mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
     [self.window makeKeyAndVisible];
 
-    // Show the main view controller
-
-    MCIntent* intent = [MCIntent intentWithSectionName:@"YourSectionViewController"];
+###### Start showing your first sections and views
+    
+    // Make an intent
+    MCIntent* intent = [MCIntent intentWithSectionName:@"YourMCSectionViewController" andViewName:@"YourMCViewController];
+    
+    // Set properties to it if needed
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
-    [[MCViewModel sharedModel] setCurrentSection:intent];
+    
+    // Process the intent, Manticore will do the rest for you
+    [[MCViewModel sharedModel] processIntent:intent];
 
-    // ...
+    // You use the same process to switch to other views and sections
+    
 
 Sections and Views
 ------------------
