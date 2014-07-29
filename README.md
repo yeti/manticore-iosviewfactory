@@ -4,7 +4,7 @@
         
 ##Overview
 
-**Manticore-iosviewmanager** is a view-management pattern for all iOS apps. It aims at making the creation iOS applications easier, without the pain of having to care about managing your view-controllers.       
+**Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about managing your different View-Controllers.       
 Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications although it will help you in the making of any type of application.      
 
 **Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html) : treating views as activities.
@@ -29,7 +29,7 @@ Features included with this release:
 
 * Two-level hierarchical view controller
 * Intents to switch between activities, similar to Android intents
-* Easy transmission of data between Manticore View-Controllers
+* Easy transmission of data between Manticore View-Controllers (MCViewController and MCSectionViewController)
 * Static navigation between view-controllers using their names
 * Dynamic navigation between view-controllers using the history stack
 
@@ -50,7 +50,7 @@ You will then need to **register** your activities (all your Manticore View-Cont
     [factory registerView:@"YourMCSectionViewControllers"];
     [factory registerView:@"YourMCViewControllers"];
 
-    // the following two lines are optional. Built in activities will show instead.
+    // the following two lines are optional : built-in activities will show instead.
     [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
     [factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
     
@@ -64,19 +64,31 @@ You will then need to **register** your activities (all your Manticore View-Cont
     [mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
     [self.window makeKeyAndVisible];
 
-###### Start showing your first sections and views
+###### Start showing your first section and view
     
     // Make an intent
     MCIntent* intent = [MCIntent intentWithSectionName:@"YourMCSectionViewController" andViewName:@"YourMCViewController];
     
-    // Set properties to it if needed
+    // Set properties to it as needed
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     
-    // Process the intent, Manticore will do the rest for you
+    // Process the intent when you are ready to switch to the next view-controller,
+    // Manticore-iosviewmanager will manage everything for you
     [[MCViewModel sharedModel] processIntent:intent];
 
-    // You use the same process to switch to other views and sections
+###### Next views and sections
+
+    // You use the same process as in "Start showing your first section and view"
+    // to switch to other views and sections.
+    // As your stack grows, you may use dynamic switching between views and/or sections:
     
+    // An example on making a dynamic intent that will go back in history by 3 intents :
+    MCIntent* intent = [MCIntent MCIntentintentToLoadHistoricalIntentNumber:3] 
+    
+    // Then the rest remains the same :
+    [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+    [[MCViewModel sharedModel] processIntent:intent];
+
 
 Sections and Views
 ------------------
