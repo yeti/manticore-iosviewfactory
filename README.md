@@ -41,7 +41,7 @@ Importing `ManticoreViewFactory.h` will provide your file with all the necessary
     #import "ManticoreViewFactory.h"
 
 ###### Initialize
-You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere like in `application:didFinishLaunchingWithOptions:` :
+You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere in `application:didFinishLaunchingWithOptions:` :
 
     // Get the MCViewFactory singleton instance :   
     MCViewFactory *factory = [MCViewFactory sharedFactory];
