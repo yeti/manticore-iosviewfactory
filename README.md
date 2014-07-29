@@ -33,22 +33,43 @@ Features included with this release:
 * Static navigation between view-controllers using their names
 * Dynamic navigation between view-controllers using the history stack
 
-##Basic Usage
+##Getting started : basic usage
 
 ###### Import
-Importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
+Wherever you are using Manticore, importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
 
     #import "ManticoreViewFactory.h"
+
+
+###### Create your View-Controllers : Sub-class MCSectionViewController or MCViewController
+
+Here, we will create one section with two views. The section has to sub-class MCSectionViewController and the view has to sub-class MCViewController. Create these classes with their .xib associated.
+
+    // Section1VC.h 
+    @interface Section1VC : MCSectionViewController
+    @end
+    
+    // View1VC.h
+    @interface View1VC : MCViewController
+    @end
+    
+    // View2VC.h
+    @interface View2VC : MCViewController
+    @end
+
 
 ###### Initialize
 You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere in `application:didFinishLaunchingWithOptions:` :
 
+    #import "ManticoreViewFactory.h"
+    
     // Get the MCViewFactory singleton instance :   
     MCViewFactory *factory = [MCViewFactory sharedFactory];
 
-    // Register all your Manticore View-Controllers
-    [factory registerView:@"YourMCSectionViewControllers"];
-    [factory registerView:@"YourMCViewControllers"];
+    // Register all your Manticore View-Controllers (we have three here)
+    [factory registerView:@"Section1VC"];
+    [factory registerView:@"View1VC"];
+    [factory registerView:@"View2VC"];
 
     // the following two lines are optional : built-in activities will show instead.
     [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
@@ -56,8 +77,7 @@ You will then need to **register** your activities (all your Manticore View-Cont
     
 
 ###### Assign Manticore's MainViewController to your application's window
-
-    // Still in "application:didFinishLaunchingWithOptions:" here
+Still in "application:didFinishLaunchingWithOptions:"
 
     UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
     [self.window setRootViewController:mainVC];
@@ -65,9 +85,10 @@ You will then need to **register** your activities (all your Manticore View-Cont
     [self.window makeKeyAndVisible];
 
 ###### Start showing your first section and view
+Still in "application:didFinishLaunchingWithOptions:"
     
     // Make an intent
-    MCIntent* intent = [MCIntent intentWithSectionName:@"YourMCSectionViewController" andViewName:@"YourMCViewController];
+    MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View1VC];
     
     // Set properties to it as needed
     [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
@@ -77,12 +98,12 @@ You will then need to **register** your activities (all your Manticore View-Cont
     [[MCViewModel sharedModel] processIntent:intent];
 
 ###### Next views and sections
-
-    // You use the same process as in "Start showing your first section and view"
-    // to switch to other views and sections.
-    // As your stack grows, you may use dynamic switching between views and/or sections:
+You use the same process as in "Start showing your first section and view" to switch to other views and sections. As your stack grows, you may want to use dynamic switching between views and/or sections.
     
-    // An example on making a dynamic intent that will go back in history by 3 intents :
+    // Statically switch to the second view :
+    MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View2VC];
+    
+    // An example on making a dynamic intent that would go back in history by 3 intents :
     MCIntent* intent = [MCIntent MCIntentintentToLoadHistoricalIntentNumber:3] 
     
     // Then the rest remains the same :
