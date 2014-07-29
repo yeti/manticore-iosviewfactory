@@ -14,11 +14,13 @@ Designed with a two-level hierarchical view controller structure, *manticore-ios
 ##Installation
 
 
-Install from CocoaPods using this repository.
+Installation with CocoaPods is really easy. Add this line to your Podfile then `pod install` :
+
+    pod 'MCViewFactory', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Early releases of Manticore iOS View Factory must be installed directly from this github repository:
 
-    pod 'manticore-iosviewfactory', '~> 0.0.9', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
+    pod 'manticore-iosviewfactory', '~> X.X.X', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 ##Features
 
