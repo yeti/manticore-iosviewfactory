@@ -1,12 +1,18 @@
-Manticore iOS View Factory
-==========================
+#Manticore iOS View Manager
 
-*manticore-iosviewfactory* is a view controller factory pattern for creating iOS applications.
-Designed with a two-level hierarchical view controller structure for a tabbed application. 
-Inspired by [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
 
-Installation
-------------
+        
+        
+        
+##Overview
+
+**Manticore-iosviewmanager** is a view-management pattern for all iOS apps. It aims at making the creation iOS applications easier, without the pain of having to care about managing your view-controllers.       
+Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications although it will help you in the making of any type of application.      
+
+**Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html) : treating views as activities.
+
+##Installation
+
 
 Install from CocoaPods using this repository.
 
@@ -14,16 +20,15 @@ Early releases of Manticore iOS View Factory must be installed directly from thi
 
     pod 'manticore-iosviewfactory', '~> 0.0.9', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
-Features
---------
+##Features
 
 Features included with this release:
 
 * Two-level hierarchical view controller
+* Easily transmit data between views
 * Intents to switch between activities, similar to Android intents
 
-Basic Usage
------------
+##Basic Usage
 
     #import "ManticoreViewFactory.h"
 
