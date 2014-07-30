@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Yeti LLC. All rights reserved.
 //
 
-#import "MCViewFactory.h"
+#import "MCViewManager.h"
 #import "MCMainViewController.h"
 #import <QuartzCore/QuartzCore.h>
 
@@ -15,57 +15,74 @@
 #define AssertFileExists(path) NSAssert([[NSFileManager defaultManager] fileExistsAtPath:path], @"Cannot find the file: %@", path)
 #define AssertNibExists(file_name_string) AssertFileExists([[NSBundle mainBundle] pathForResource:file_name_string ofType:@"nib"])
 
-@interface MCViewFactoryEntry : NSObject {
-}
+
+
+#pragma mark
+#pragma mark - MCViewManagerEntry class
+
+// -------------------------------------------------------------------------------------------
+// Object representing a registered view : MCViewManagerEntry
+//
+@interface MCViewManagerEntry : NSObject
 @property NSString* nibName;
 @property NSString* className;
-
 @end
 
-@implementation MCViewFactoryEntry
+@implementation MCViewManagerEntry
 @synthesize nibName;
 @synthesize className;
+@end
+
+
+#pragma mark
+#pragma mark - MCViewManager class
+
+@interface MCViewManager ()
+
+// Containes 
+//@property (strong, nonatomic) NSMutableDictionary* viewControllers;
 
 @end
 
-@implementation MCViewFactory
 
-static MCViewFactory* _sharedFactory = nil;
+@implementation MCViewManager
 
-+(MCViewFactory*)sharedFactory
-{
-	@synchronized([MCViewFactory class])
-	{
-		if (!_sharedFactory)
-			_sharedFactory = [[self alloc] init];
-		return _sharedFactory;
-	}
-	return nil;
-}
-
-+(id)alloc
-{
-	@synchronized([MCViewFactory class])
-	{
-		NSAssert(_sharedFactory == nil, @"Attempted to allocate a second instance of a singleton.");
-		_sharedFactory = [super alloc];
-		return _sharedFactory;
-	}
-	return nil;
-}
+#pragma mark - Initialization
 
 -(id)init{
-  if (self = [super init]){
-    viewControllers = [NSMutableDictionary dictionaryWithCapacity:20];
-  }
-  
-  return self;
+    if (self = [super init]){
+        viewControllers = [NSMutableDictionary dictionaryWithCapacity:20];
+    }
+    return self;
 }
 
+
+// --------------------------------------------------------------------------------------------
+// Function to get the singleton
+//
++(MCViewManager *)sharedManager
+{
+    static MCViewManager* sharedManager = nil;
+	static dispatch_once_t onceToken;
+    
+    dispatch_once(&onceToken, ^{
+        sharedManager = [[MCViewManager alloc] init];
+    });
+    return sharedManager;
+}
+
+
+#pragma mark - Low-level function
+
+// -------------------------------------------------------------------------------------------
+// Low-level function that creates and return a ViewController.
+// Does not provide caching and Manticore events (onCreate, ...)
+//
+// Input : name of a sectionViewController or a viewController
+//
 -(UIViewController*)createViewController:(NSString*)sectionOrViewName{
   
-
-  MCViewFactoryEntry* entry = [viewControllers objectForKey:sectionOrViewName];
+  MCViewManagerEntry* entry = [viewControllers objectForKey:sectionOrViewName];
   Class class = NSClassFromString(sectionOrViewName);
   NSAssert(class != nil, @"Class must exist");
   
@@ -79,8 +96,18 @@ static MCViewFactory* _sharedFactory = nil;
   return vc;
 }
 
+
+#pragma mark - View registration
+
+// -------------------------------------------------------------------------------------------
+// Each view needs to be registered in order to be managed by Manticore.
+// This method should be called one time for each viewController.
+//
+// Shouldn't it be registerViewController ????????
+// Make a test and not register if already present in array ?????????
+//
 -(void)registerView:(NSString*)sectionOrViewName{
-  MCViewFactoryEntry* entry = [[MCViewFactoryEntry alloc] init];
+  MCViewManagerEntry* entry = [[MCViewManagerEntry alloc] init];
   entry.nibName = sectionOrViewName;
   entry.className = sectionOrViewName;
   
@@ -97,8 +124,15 @@ static MCViewFactory* _sharedFactory = nil;
 //  [viewControllers setObject:entry  forKey:sectionOrViewName];
 //}
 
+
+
+
+#pragma mark - Apply view transition
+
+// -------------------------------------------------------------------------------------------
 // this method offers custom animations that are not provided by UIView, mainly the
 // slide left and right animations (no idea why Apple separated these animations)
+//
 +(BOOL)applyTransitionFromView:(UIView*)oldView toView:(UIView*)newView transition:(int)value completion:(void (^)(void))completion  {
     
     // not the best place for this code but it'll work for now

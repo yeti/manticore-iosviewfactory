@@ -12,31 +12,63 @@
 
 @interface MCViewModel : NSObject
 
-// view
-@property(atomic,retain) NSDictionary* errorDict;
-@property(atomic,retain) MCIntent* currentIntent;
-@property(atomic,retain) NSString* screenOverlay; // name of the screen overlay, naming convention of UIImage, may be suffixed by _5, do not include extension
-@property(atomic,retain) NSArray* screenOverlays; // array of strings that name the screen overlays to show in succession, may be suffixed by _5, do not include extension
-@property(atomic,retain) NSMutableArray* historyStack; // saved intents on the history stack. Do not change this variable directly.
+// Pointer to the error dictionary
+@property(atomic, strong) NSDictionary      *errorDict;
 
-// valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0. Stack size includes the current view controller.
+// Pointer to the current intent
+@property(atomic, strong) MCIntent          *currentIntent;
+
+// Name of the screen overlay : naming convention of UIImage. Do not include extension.
+// May be suffixed by _5 for iPhone 5 screen size overlay.
+@property(atomic, strong) NSString          *screenOverlay;
+
+// Array of strings for multiple overlays. Naming convention of UIImage. Do not include extension.
+// May be suffixed by _5 for iPhone 5 screen size overlay.
+@property(atomic, strong) NSArray           *screenOverlays;
+
+// Saved intents on the history stack. Do not change this variable directly.
+@property(atomic, strong) NSMutableArray    *historyStack;
+
+// Valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0.
+// Stack size includes the current view controller.
 @property() int stackSize;
 
-+ (MCViewModel * ) sharedModel;
 
-// clear the history of intents
--(void) clearHistoryStack;
+//--------------------------------------------------------------------------------
+// Singleton Object
+//
++ (MCViewModel * )sharedModel;
 
-// clear the cached UIViewControllers created by MCMainViewController
-- (void) clearViewCache;
 
-// show an error message above the main window, does not affect the history stack
-- (void) setErrorTitle:(NSString*) title andDescription:(NSString*) description;
+//--------------------------------------------------------------------------------
+// Clear the history of intents
+//
+- (void)clearHistoryStack;
 
-//setting of the currentIntent needs to be wrapped in case we ever need to make changes again
--(void) processIntent:(MCIntent *)newCurrentIntent;
 
-//please use processIntent: (MCIntent *) newCurrentIntent instead of this method
--(void) setCurrentSection: (MCIntent *)currentIntent __deprecated;
+//--------------------------------------------------------------------------------
+// Clear the cached UIViewControllers created by MCMainViewController
+//
+- (void)clearViewCache;
+
+
+//--------------------------------------------------------------------------------
+// Shows an error message above the main window, does not affect the history stack
+//
+- (void)setErrorTitle:(NSString*) title andDescription:(NSString*) description;
+
+
+//--------------------------------------------------------------------------------
+// Will process the given intent and place it as first responder
+// Setting of the currentIntent needs to be wrapped in case we ever need to make changes again
+//
+- (void)processIntent:(MCIntent *)newCurrentIntent;
+
+
+//--------------------------------------------------------------------------------
+// DEPRECIATED, PLEASE USE : - (void)processIntent:(MCIntent *)newCurrentIntent;
+//
+//
+- (void)setCurrentSection: (MCIntent *)currentIntent __deprecated;
 
 @end

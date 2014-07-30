@@ -10,25 +10,15 @@
 
 @implementation MCViewModel
 
+
 @synthesize errorDict;
 @synthesize currentIntent;
 @synthesize historyStack;
 @synthesize screenOverlay;
 @synthesize stackSize;
 
-MCViewModel* _sharedModel;
 
-/* Singleton */
-+ (MCViewModel*) sharedModel
-{
-	@synchronized([MCViewModel class])
-	{
-		if (!_sharedModel)
-			_sharedModel = [[self alloc] init];
-		return _sharedModel;
-	}
-	return nil;
-}
+#pragma mark - Initialization & Singleton
 
 - (id) init {
   if (self = [super init]){
@@ -39,14 +29,45 @@ MCViewModel* _sharedModel;
   return self;
 }
 
+
+// -------------------------------------------------------------------------------
+// Function to get the singleton
+//
++(MCViewModel *)sharedModel
+{
+    static MCViewModel* sharedModel = nil;
+	static dispatch_once_t onceToken;
+    
+    dispatch_once(&onceToken, ^{
+        sharedModel = [[MCViewModel alloc] init];
+    });
+    return sharedModel;
+}
+
+
+#pragma mark -
+
+//--------------------------------------------------------------------------------
+// Clear the history of intents
+//
 - (void) clearHistoryStack{
     historyStack = [NSMutableArray arrayWithCapacity:stackSize];
 }
 
+
+//--------------------------------------------------------------------------------
+// Clear the cached UIViewControllers created by MCMainViewController
+//
 - (void) clearViewCache {
   [[NSNotificationCenter defaultCenter] postNotificationName:@"MCMainViewController_flushViewCache" object:self];
 }
 
+
+#pragma mark -
+
+//--------------------------------------------------------------------------------
+// Shows an error message above the main window, does not affect the history stack
+//
 -(void) setErrorTitle:(NSString*) title andDescription:(NSString*) description
 {
   if (title == nil)
@@ -58,6 +79,12 @@ MCViewModel* _sharedModel;
   [self setErrorDict: [NSDictionary dictionaryWithObjects:@[title, description] forKeys:@[@"title", @"description"]]];
 }
 
+
+#pragma mark -
+
+//--------------------------------------------------------------------------------
+// Will process the given intent and place it as first responder
+//
 -(void) processIntent:(MCIntent *)newCurrentIntent {
   [self setCurrentIntent: newCurrentIntent];
 }

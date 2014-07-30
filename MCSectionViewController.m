@@ -7,7 +7,7 @@
 //
 
 #import "MCSectionViewController.h"
-#import "MCViewFactory.h"
+#import "MCViewManager.h"
 
 @interface MCSectionViewController ()
 

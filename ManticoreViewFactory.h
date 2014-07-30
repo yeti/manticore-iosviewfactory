@@ -8,6 +8,6 @@
 #import "MCConstants.h"
 #import "MCSectionViewController.h"
 #import "MCViewController.h"
-#import "MCViewFactory.h"
+#import "MCViewManager.h"
 #import "MCViewModel.h"
 #import "MCIntent.h"
