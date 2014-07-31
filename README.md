@@ -33,94 +33,132 @@ Features included with this release:
 * Static navigation between view-controllers using their names
 * Dynamic navigation between view-controllers using the history stack
 
+
+
 ##Getting started : basic usage
 
 ###### Import
 Wherever you are using Manticore, importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
 
-    #import "ManticoreViewFactory.h"
+```objc
+#import "ManticoreViewFactory.h"
+```
 
 
 ###### Create your View-Controllers : Sub-class MCSectionViewController or MCViewController
 
 Here, we will create one section with two views. The section has to sub-class MCSectionViewController and the view has to sub-class MCViewController. Create these classes with their .xib associated.
 
-    // Section1VC.h 
-    @interface Section1VC : MCSectionViewController
-    @end
-    
-    // View1VC.h
-    @interface View1VC : MCViewController
-    @end
-    
-    // View2VC.h
-    @interface View2VC : MCViewController
-    @end
+```objc
+// Section1VC.h 
+@interface Section1VC : MCSectionViewController
+@end
 
+// View1VC.h
+@interface View1VC : MCViewController
+@end
+
+// View2VC.h
+@interface View2VC : MCViewController
+@end
+```
 
 ###### Initialize
 You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere in `application:didFinishLaunchingWithOptions:` :
 
-    #import "ManticoreViewFactory.h"
-    
-    // Get the MCViewFactory singleton instance :   
-    MCViewFactory *factory = [MCViewFactory sharedFactory];
+```objc
+#import "ManticoreViewFactory.h"
 
-    // Register all your Manticore View-Controllers (we have three here)
-    [factory registerView:@"Section1VC"];
-    [factory registerView:@"View1VC"];
-    [factory registerView:@"View2VC"];
+// Get the MCViewFactory singleton instance :   
+MCViewFactory *factory = [MCViewFactory sharedFactory];
 
-    // the following two lines are optional : built-in activities will show instead.
-    [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
-    [factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
-    
+// Register all your Manticore View-Controllers (we have three here)
+[factory registerView:@"Section1VC"];
+[factory registerView:@"View1VC"];
+[factory registerView:@"View2VC"];
+
+// the following two lines are optional : built-in activities will show instead.
+[factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
+[factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
+```
 
 ###### Assign Manticore's MainViewController to your application's window
 Still in "application:didFinishLaunchingWithOptions:"
 
-    UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
-    [self.window setRootViewController:mainVC];
-    [mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
-    [self.window makeKeyAndVisible];
+```objc
+UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
+[self.window setRootViewController:mainVC];
+[mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
+[self.window makeKeyAndVisible];
+```
 
 ###### Start showing your first section and view
 Still in "application:didFinishLaunchingWithOptions:"
     
-    // Make an intent
-    MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View1VC];
+```objc
+// Make an intent
+MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View1VC];
     
-    // Set properties to it as needed
-    [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+// Set properties to it as needed
+[intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
     
-    // Process the intent when you are ready to switch to the next view-controller,
-    // Manticore-iosviewmanager will manage everything for you
-    [[MCViewModel sharedModel] processIntent:intent];
+// Process the intent when you are ready to switch to the next view-controller,
+// Manticore-iosviewmanager will manage everything for you
+[[MCViewModel sharedModel] processIntent:intent];
+```
 
 ###### Next views and sections
 You use the same process as in "Start showing your first section and view" to switch to other views and sections. As your stack grows, you may want to use dynamic switching between views and/or sections.
-    
-    // Statically switch to the second view :
-    MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View2VC];
-    
-    // An example on making a dynamic intent that would go back in history by 3 intents :
-    MCIntent* intent = [MCIntent MCIntentintentToLoadHistoricalIntentNumber:3] 
-    
-    // Then the rest remains the same :
-    [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
-    [[MCViewModel sharedModel] processIntent:intent];
+
+```objc
+// Statically switch to the second view :
+MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View2VC];
+
+// An example on making a dynamic intent that would go back in history by 3 intents :
+MCIntent* intent = [MCIntent MCIntentintentToLoadHistoricalIntentNumber:3] 
+
+// Then the rest remains the same :
+[intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+[[MCViewModel sharedModel] processIntent:intent];
+```
 
 
-Sections and Views
-------------------
+-------------
+-------------
 
-*Sections* should correspond to a user interface's tabs and *views* should correspond to the views inside a tab.
+##Sections and Views
+
+######Understanding the concept
+
+When developping your application you will usually want to group your View-Controllers into groups. As an example, if you were to develop a social app, you could want to group your VCs into these groups :
+
+* Logins : all your VCs related to the login process (welcome vc, login vc, reset-password vc...)
+* Profile : all your VCs related to managing the user's profile
+* Feeds : all your VCs related to showing your different feeds
+* and so on ...
+
+The **Sections** would here be `Logins` `Profile` `Feeds`.    
+The **Views** would be all your VCs inside these groups.  
+    
+Sections can be seen as a way of organizing your application's views.
+Both are sub-classes of `UIViewController` 
+
+
+###### Using a tabbed application
+
+**Sections** should correspond to a user interface's tabs and **views** should correspond to the views inside a tab.
  Prefixes and suffixes are not included in the schema definition.
 
 Sections can also be shown without views in order to create single-level hierarchy,
 but it's a better design to create one section with multiple views.
 
 NOTE: I haven't tested a single-level hierarchy with all sections and no views.
+
+
+
+
+
+
 
 ### Two-Level Hierarchy
 
@@ -316,8 +354,27 @@ Compiler settings
 
 Define `DEBUG` in compile settings to show debugger messages. `NSAssert` messages are unaffected by this setting.
 
-Release notes
--------------
+##Release notes
+
+###Release 0.1.0
+
+* Refactoring :
+  * Now comply with ARC
+  * No more iVar direct manipulation
+  * 
+  
+* Renaming : 
+  * `MCViewFactory` becomes `MCViewManager`  
+  * 
+  
+* Class changes :
+  * MCViewManager :
+    * Removed `registerView: andNibName:` function
+    * Removed `MCViewManagerEntry` (upper function needed it)
+    * 
+
+
+### Previous releases
 
 0.0.9: added helper intent for navigating to the previous screen
 
