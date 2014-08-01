@@ -1,73 +1,164 @@
-Manticore iOS View Factory
-==========================
+#Welcome to Manticore iOS View Manager
+    
+        
+        
+##Overview
 
-*manticore-iosviewfactory* is a view controller factory pattern for creating iOS applications.
-Designed with a two-level hierarchical view controller structure for a tabbed application. 
-Inspired by [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
+**Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about managing your different View-Controllers.       
+Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications although it will help you in the making of any type of application.      
 
-Installation
-------------
+**Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html) : treating views as activities.
 
-Install from CocoaPods using this repository.
+##Installation
+
+
+Installation using CocoaPods is really easy. Add this line to your Podfile then `pod install` :
+
+    pod 'MCViewFactory', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
 Early releases of Manticore iOS View Factory must be installed directly from this github repository:
 
-    pod 'manticore-iosviewfactory', '~> 0.0.9', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
+    pod 'manticore-iosviewfactory', '~> X.X.X', :git => 'https://github.com/YetiHQ/manticore-iosviewfactory.git'
 
-Features
---------
+If you do not wish to use CocoaPods, you may always do it the old way and copy the files into your project.     
+Manticore-iosviewmanager does not require any external dependencies.
+
+##Features
 
 Features included with this release:
 
 * Two-level hierarchical view controller
 * Intents to switch between activities, similar to Android intents
+* Easy transmission of data between Manticore View-Controllers (MCViewController and MCSectionViewController)
+* Static navigation between view-controllers using their names
+* Dynamic navigation between view-controllers using the history stack
 
-Basic Usage
------------
 
-    #import "ManticoreViewFactory.h"
 
-After the application has loaded, for example, in `application:didFinishLaunchingWithOptions:`
+##Getting started : basic usage
 
-    // Some standard window setup
+###### Import
+Wherever you are using Manticore, importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
 
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.backgroundColor = [UIColor whiteColor];
+```objc
+#import "ManticoreViewFactory.h"
+```
 
-    // Register activities
 
-    MCViewFactory *factory = [MCViewFactory sharedFactory];
+###### Create your View-Controllers : Sub-class MCSectionViewController or MCViewController
 
-    // the following two lines are optional. Built in activities will show instead.
-    [factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
-    [factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
-    [factory registerView:@"YourSectionViewController"];
+Here, we will create one section with two views. The section has to sub-class MCSectionViewController and the view has to sub-class MCViewController. Create these classes with their .xib associated.
 
-    // Run the factory methods
+```objc
+// Section1VC.h 
+@interface Section1VC : MCSectionViewController
+@end
 
-    UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
-    [self.window setRootViewController:mainVC];
-    [mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
-    [self.window makeKeyAndVisible];
+// View1VC.h
+@interface View1VC : MCViewController
+@end
 
-    // Show the main view controller
+// View2VC.h
+@interface View2VC : MCViewController
+@end
+```
 
-    MCIntent* intent = [MCIntent intentWithSectionName:@"YourSectionViewController"];
-    [intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
-    [[MCViewModel sharedModel] setCurrentSection:intent];
+###### Initialize
+You will then need to **register** your activities (all your Manticore View-Controllers). We suggest doing this initialization process somewhere in `application:didFinishLaunchingWithOptions:` :
 
-    // ...
+```objc
+#import "ManticoreViewFactory.h"
 
-Sections and Views
-------------------
+// Get the MCViewFactory singleton instance :   
+MCViewFactory *factory = [MCViewFactory sharedFactory];
 
-*Sections* should correspond to a user interface's tabs and *views* should correspond to the views inside a tab.
+// Register all your Manticore View-Controllers (we have three here)
+[factory registerView:@"Section1VC"];
+[factory registerView:@"View1VC"];
+[factory registerView:@"View2VC"];
+
+// the following two lines are optional : built-in activities will show instead.
+[factory registerView:VIEW_BUILTIN_MAIN];  // comment this line out if you don't create MCMainViewController.xib and subclass MCMainViewController
+[factory registerView:VIEW_BUILTIN_ERROR]; // comment this line out if you don't create MCErrorViewController.xib and subclass MCErrorViewController
+```
+
+###### Assign Manticore's MainViewController to your application's window
+Still in "application:didFinishLaunchingWithOptions:"
+
+```objc
+UIViewController* mainVC = [[MCViewFactory sharedFactory] createViewController:VIEW_BUILTIN_MAIN];
+[self.window setRootViewController:mainVC];
+[mainVC.view setFrame:[[UIScreen mainScreen] bounds]];
+[self.window makeKeyAndVisible];
+```
+
+###### Start showing your first section and view
+Still in "application:didFinishLaunchingWithOptions:"
+    
+```objc
+// Make an intent
+MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View1VC];
+    
+// Set properties to it as needed
+[intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+    
+// Process the intent when you are ready to switch to the next view-controller,
+// Manticore-iosviewmanager will manage everything for you
+[[MCViewModel sharedModel] processIntent:intent];
+```
+
+###### Next views and sections
+You use the same process as in "Start showing your first section and view" to switch to other views and sections. As your stack grows, you may want to use dynamic switching between views and/or sections.
+
+```objc
+// Statically switch to the second view :
+MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"View2VC];
+
+// An example on making a dynamic intent that would go back in history by 3 intents :
+MCIntent* intent = [MCIntent MCIntentintentToLoadHistoricalIntentNumber:3] 
+
+// Then the rest remains the same :
+[intent setAnimationStyle:UIViewAnimationOptionTransitionFlipFromLeft];
+[[MCViewModel sharedModel] processIntent:intent];
+```
+
+
+-------------
+-------------
+
+##Sections and Views
+
+######Understanding the concept
+
+When developping your application you will usually want to group your View-Controllers into groups. As an example, if you were to develop a social app, you could want to group your VCs into these groups :
+
+* Logins : all your VCs related to the login process (welcome vc, login vc, reset-password vc...)
+* Profile : all your VCs related to managing the user's profile
+* Feeds : all your VCs related to showing your different feeds
+* and so on ...
+
+The **Sections** would here be `Logins` `Profile` `Feeds`.    
+The **Views** would be all your VCs inside these groups.  
+    
+Sections can be seen as a way of organizing your application's views.
+Both are sub-classes of `UIViewController` 
+
+
+###### Using a tabbed application
+
+**Sections** should correspond to a user interface's tabs and **views** should correspond to the views inside a tab.
  Prefixes and suffixes are not included in the schema definition.
 
 Sections can also be shown without views in order to create single-level hierarchy,
 but it's a better design to create one section with multiple views.
 
 NOTE: I haven't tested a single-level hierarchy with all sections and no views.
+
+
+
+
+
+
 
 ### Two-Level Hierarchy
 
@@ -263,8 +354,27 @@ Compiler settings
 
 Define `DEBUG` in compile settings to show debugger messages. `NSAssert` messages are unaffected by this setting.
 
-Release notes
--------------
+##Release notes
+
+###Release 0.1.0
+
+* Refactoring :
+  * Now comply with ARC
+  * No more iVar direct manipulation
+  * 
+  
+* Renaming : 
+  * `MCViewFactory` becomes `MCViewManager`  
+  * 
+  
+* Class changes :
+  * MCViewManager :
+    * Removed `registerView: andNibName:` function
+    * Removed `MCViewManagerEntry` (upper function needed it)
+    * 
+
+
+### Previous releases
 
 0.0.9: added helper intent for navigating to the previous screen
 
