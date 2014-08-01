@@ -40,22 +40,28 @@
 }
 
 
--(void)onResume:(MCIntent *)intent{
+-(void)onCreate
+{
+    [super onCreate];
+}
+
+
+-(void)onResume:(MCIntent *)intent
+{
   [super onResume:intent];
   
   if (currentViewVC) {
     [currentViewVC onResume:intent];
   }
-  
-  
 }
 
--(void)onPause:(MCIntent *)intent{
-  if (currentViewVC){
-    [currentViewVC onPause:intent];
-  }
-  [super onPause:intent];
-
+-(void)onPause:(MCIntent *)intent
+{
+    if (currentViewVC){
+        [currentViewVC onPause:intent];
+    }
+    
+    [super onPause:intent];
 }
 
 @end

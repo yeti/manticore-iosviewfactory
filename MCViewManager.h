@@ -9,28 +9,16 @@
 #import <Foundation/Foundation.h>
 #import "MCConstants.h"
 
-@interface MCViewManager : NSObject {
-    NSMutableDictionary* viewControllers;
-}
+@interface MCViewManager : NSObject 
 
-// -------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------
 // Get the singleton instance.
 //
 +(MCViewManager*)sharedManager;
 
 
 
-// -------------------------------------------------------------------------------------------
-// Low-level function that creates and return a ViewController.
-// Does not provide caching and Manticore events (onCreate, ...)
-//
-// Input : name of a sectionViewController or a viewController
-//
--(UIViewController*)createViewController:(NSString*)sectionOrViewName;
-
-
-
-// -------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------
 // Each view needs to be registered in order to be managed by Manticore.
 // This method should be called one time for each viewController.
 //
@@ -38,12 +26,14 @@
 
 
 
-// -------------------------------------------------------------------------------------------
-// this method offers custom animations that are not provided by UIView, mainly the
-// slide left and right animations (no idea why Apple separated these animations)
+// ------------------------------------------------------------------
+// Low-level function that creates and return a ViewController.
+// Does not provide caching and Manticore events (onCreate, ...)
 //
+// Input : name of a sectionViewController or a viewController that
+//     was previously registered
 //
-+(BOOL)applyTransitionFromView:(UIView*)oldView toView:(UIView*)newView transition:(int)value completion:(void (^)(void))completion;
+-(UIViewController*)createViewController:(NSString*)sectionOrViewName;
 
 
 @end
