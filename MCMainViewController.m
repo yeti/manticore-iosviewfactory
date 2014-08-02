@@ -3,11 +3,11 @@
 //  Manticore iOSViewFactory
 //
 //  Created by Richard Fung on 1/22/13.
-//  Copyright (c) 2013 Yeti LLC. All rights reserved.
+//  Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+//  Copyright (c) 2014 Yeti LLC. All rights reserved.
 //
 
 #import "MCViewController.h"
-#import "MCViewModel.h"
 #import "MCErrorViewController.h"
 #import "MCMainViewController.h"
 #import "MCSectionViewController.h"
@@ -36,98 +36,104 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 
 /* 
- Register listeners to repsond to MCViewModel changes
+ Register listeners to repsond to MCViewManager changes
  */
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
         // Custom initialization
-      // register to listeners on model changes
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"currentIntent" options: NSKeyValueObservingOptionNew context: nil];
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
-      [[MCViewModel sharedModel] addObserver:self forKeyPath:@"screenOverlays" options: NSKeyValueObservingOptionNew context: nil];
-      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flushViewCache:) name:@"MCMainViewController_flushViewCache" object:[MCViewModel sharedModel]];
-        // last parameter filters the response
+        // register to listeners on model changes
+        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"currentIntent" options: NSKeyValueObservingOptionNew context: nil];
+        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
+        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
+        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"screenOverlays" options: NSKeyValueObservingOptionNew context: nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flushViewCache:) name:@"MCMainViewController_flushViewCache" object:[MCViewManager sharedManager]];
     }
     return self;
 }
 
--(void)viewDidAppear:(BOOL)animated{
-  
-}
 
 - (void)viewDidLoad
 {
-  [super viewDidLoad];
-  // Do any additional setup after loading the view from its nib.
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
 }
 
 - (void)didReceiveMemoryWarning
 {
-  [super didReceiveMemoryWarning];
-  // Dispose of any resources that can be recreated.
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
   
-  dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
-// Selector that specifies the message the receiver sends notificationObserver to notify it of the notification posting. The method specified by notificationSelector must have one and only one argument (an instance of NSNotification).
--(void)flushViewCache:(id)sender{
-  dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];  
+// Selector called when MCViewManager flushViewCache's method is called.
+-(void)flushViewCache:(NSNotification *)notification
+{
+    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
-/*
- This method directs to the appropriate responders for the changes made to the MCViewModel
- */
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if ([keyPath isEqualToString:@"currentIntent"]) {
-      manticore_runOnMainQueueWithoutDeadlocking(^{
-        [self goToIntent:[MCViewModel sharedModel].currentIntent];
-      });
+// ----------------------------------------------------------------------------
+// Modified value changes are observed from MCViewManager :
+//      - currentIntent
+//      - errorDict
+//      - screenOverlay
+//      - screenOverlays
+//
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"currentIntent"])
+    {
+        manticore_runOnMainQueueWithoutDeadlocking(^{
+            [self goToIntent:[object valueForKeyPath:keyPath]];
+        });
     
-  } else if ([keyPath isEqualToString:@"errorDict"]) {
-      manticore_runOnMainQueueWithoutDeadlocking(^{
-          if (!errorVC) {
-          errorVC = (MCErrorViewController*) [[MCViewManager sharedManager] createViewController:VIEW_BUILTIN_ERROR];
-          }
-        
-          // remove from the previous
-          [errorVC.view removeFromSuperview];
-          [errorVC removeFromParentViewController];
+    } else if ([keyPath isEqualToString:@"errorDict"])
+    {
+        manticore_runOnMainQueueWithoutDeadlocking(^{
+            if (!errorVC)
+            {
+#warning deal with custom error controllers
+                errorVC = (MCErrorViewController*) [[MCViewManager sharedManager] createViewController:VIEW_BUILTIN_ERROR];
+            }
+            
+            // remove from the previous
+            [errorVC.view removeFromSuperview];
+            [errorVC removeFromParentViewController];
 
-          // set up
-          [errorVC loadLatestErrorMessage];
+            // set up
+            [errorVC loadLatestErrorMessageWithDictionary:[object valueForKeyPath:keyPath]];
 
-          // add to the current
-          [errorVC.view setFrame:[self.view bounds]];
-          [self.view addSubview: errorVC.view];
+            // add to the current
+            [errorVC.view setFrame:[self.view bounds]];
+            [self.view addSubview: errorVC.view];
 
-          [currentSectionVC.currentViewVC.view resignFirstResponder];
-          [currentSectionVC.view resignFirstResponder];
+            [currentSectionVC.currentViewVC.view resignFirstResponder];
+            [currentSectionVC.view resignFirstResponder];
 
 
-          [errorVC becomeFirstResponder]; // make the error dialog the first responder
+            [errorVC becomeFirstResponder]; // make the error dialog the first responder
           
-      });
+        });
   
-  } else if ([keyPath isEqualToString:@"screenOverlay"]) {
+    } else if ([keyPath isEqualToString:@"screenOverlay"])
+    {
+        manticore_runOnMainQueueWithoutDeadlocking(^{
+          
+            [self overlaySlideshow:@[[MCViewManager sharedManager].screenOverlay]];
+            
+        });
       
-      manticore_runOnMainQueueWithoutDeadlocking(^{
-        
-          [self overlaySlideshow:@[[MCViewModel sharedModel].screenOverlay]];
-        
-      });
+    } else if ([keyPath isEqualToString:@"screenOverlays"]){
       
-  } else if ([keyPath isEqualToString:@"screenOverlays"]){
+        manticore_runOnMainQueueWithoutDeadlocking(^{
+            [self overlaySlideshow:[MCViewManager sharedManager].screenOverlays];
+        });
       
-      manticore_runOnMainQueueWithoutDeadlocking(^{
-          [self overlaySlideshow:[MCViewModel sharedModel].screenOverlays];
-      });
-      
-  } else {
-      [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-  }
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
   
 }
 
@@ -135,7 +141,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 // -------------------------------------------------------------------------------
 // Callback method for transitioning to a new intent
-// 1. 
+// 1.
 //
 - (void) goToIntent: (MCIntent*) intent {
     
@@ -151,7 +157,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     
     // Load appropriate view-controller associated with intent
     MCViewController* vc = nil;
-    if ([intent viewName]){
+    if ([intent viewName])
+    {
         vc = (MCViewController*) [self loadOrCreateViewController:[intent viewName]];
         
         // Add that it shouldn't a MCSectionViewController which subclasses MCViewController
@@ -159,7 +166,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         
         /* edge case: everything we are transitioning to is the same as the previous, need to create a new view */
         // Same section same view
-        if (sectionVC == currentSectionVC && vc == currentSectionVC.currentViewVC){
+        if (sectionVC == currentSectionVC && vc == currentSectionVC.currentViewVC)
+        {
             vc = (MCViewController*) [self forceLoadViewController:[intent viewName]];
         }
     } else {
@@ -209,75 +217,83 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 #endif
 }
 
--(void)overlaySlideshow:(NSArray*)overlays{
-  screenOverlaySlideshow = overlays;
-  
-  if (!overlays || overlays.count == 0){
-    if (screenOverlayButton){
-      // fade out the overlay in 200 ms
-      screenOverlayButton.alpha = 1.0;
-      [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
-        screenOverlayButton.alpha = 0.0;
-      } completion:^(BOOL finished) {
-        [screenOverlayButton resignFirstResponder];
-        [screenOverlayButton removeFromSuperview];
-        screenOverlayButton = nil;
-      }];
+-(void)overlaySlideshow:(NSArray*)overlays
+{
+    screenOverlaySlideshow = overlays;
+    
+    if (!overlays || overlays.count == 0)
+    {
+        if (screenOverlayButton)
+        {
+            // fade out the overlay in 200 ms
+            screenOverlayButton.alpha = 1.0;
+            [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
+                screenOverlayButton.alpha = 0.0;
+            } completion:^(BOOL finished) {
+                [screenOverlayButton resignFirstResponder];
+                [screenOverlayButton removeFromSuperview];
+                screenOverlayButton = nil;
+            }];
+        }
+        return;
     }
-    return;
-  }
-  
-  // load the overlay 
-  if (!screenOverlayButton){
-    // set up the geometry of the new screen overlay
-    CGRect rect = [self.view bounds];
-    screenOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    screenOverlayButton.frame = rect;
-    screenOverlayButton.contentMode = UIViewContentModeScaleToFill;
-  }
-  
-  // this code will load 2 images on iPhone 5, one for the small screen and another image for the large screen
-  
-  // automatically remove the .png/.PNG extension
-  NSString* overlayName = [overlays objectAtIndex:0];
-  if ([[overlayName pathExtension] compare:@"png" options:NSCaseInsensitiveSearch] == NSOrderedSame){
-    overlayName = [overlayName stringByDeletingPathExtension];
-  }
-  // load the image
-  UIImage* imgOverlay = [UIImage imageNamed:overlayName];
-  
-  // check screen dimensions
-  CGRect appFrame = [[UIScreen mainScreen] bounds];
-  if (appFrame.size.height >= MANTICORE_IOS5_SCREEN_SIZE) // add in the _5 to the filename, shouldn't append .png
-  {
-    // test for an iPhone 5 overlay. If available, use that overlay instead.
-    overlayName = [NSString stringWithFormat:@"%@%@", overlayName, MANTICORE_IOS5_OVERLAY_SUFFIX];
-    if ([UIImage imageNamed:overlayName]){
-      imgOverlay = [UIImage imageNamed:overlayName];
+    
+    // load the overlay
+    if (!screenOverlayButton)
+    {
+        // set up the geometry of the new screen overlay
+        CGRect rect = [self.view bounds];
+        screenOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        screenOverlayButton.frame = rect;
+        screenOverlayButton.contentMode = UIViewContentModeScaleToFill;
     }
-  }
-  
-  // show the new overlay
-  if (imgOverlay){
-    [screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
-      screenOverlayButton.adjustsImageWhenHighlighted = NO;
-
-    [screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-    if (![self.view.subviews containsObject:screenOverlayButton]){
-      screenOverlayButton.alpha = 0.0;
-      [self.view addSubview:screenOverlayButton ];
-      [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
-        screenOverlayButton.alpha = 1.0;
-      }];
+    
+    // this code will load 2 images on iPhone 5, one for the small screen and another image for the large screen
+    
+    // automatically remove the .png/.PNG extension
+    NSString* overlayName = [overlays objectAtIndex:0];
+    if ([[overlayName pathExtension] compare:@"png" options:NSCaseInsensitiveSearch] == NSOrderedSame)
+    {
+        overlayName = [overlayName stringByDeletingPathExtension];
     }
-    [self.view bringSubviewToFront:screenOverlayButton];
-    [screenOverlayButton becomeFirstResponder];
-  }else{
+    // load the image
+    UIImage* imgOverlay = [UIImage imageNamed:overlayName];
+    
+    // check screen dimensions
+    CGRect appFrame = [[UIScreen mainScreen] bounds];
+    if (appFrame.size.height >= MANTICORE_IOS5_SCREEN_SIZE) // add in the _5 to the filename, shouldn't append .png
+    {
+        // test for an iPhone 5 overlay. If available, use that overlay instead.
+        overlayName = [NSString stringWithFormat:@"%@%@", overlayName, MANTICORE_IOS5_OVERLAY_SUFFIX];
+        if ([UIImage imageNamed:overlayName])
+        {
+            imgOverlay = [UIImage imageNamed:overlayName];
+        }
+    }
+    
+    // show the new overlay
+    if (imgOverlay)
+    {
+        [screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
+        screenOverlayButton.adjustsImageWhenHighlighted = NO;
+        
+        [screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+        if (![self.view.subviews containsObject:screenOverlayButton])
+        {
+            screenOverlayButton.alpha = 0.0;
+            [self.view addSubview:screenOverlayButton ];
+            [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
+                screenOverlayButton.alpha = 1.0;
+            }];
+        }
+        [self.view bringSubviewToFront:screenOverlayButton];
+        [screenOverlayButton becomeFirstResponder];
+    }else{
 #ifdef DEBUG
-    NSAssert(false, @"Screen overlay not found: %@", [MCViewModel sharedModel].screenOverlay);
+        NSAssert(false, @"Screen overlay not found: %@", [MCViewManager sharedManager].screenOverlay);
 #endif
-  }
-
+    }
+    
 }
 
 # pragma mark - Helper methods
@@ -287,7 +303,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 // ----------------------------------------------------------------------------------------
 // Handles intent and maintains the history stack
 //
--(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent{
+-(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent
+{
     
     /* Handles SECTION_LAST (->1) &  SECTION_REWIND (->2) */
     /*----------------------------------------------------*/
@@ -307,12 +324,12 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         MCIntent* previousIntent = [self popHistoryStack: popNum];
 #ifdef DEBUG
         if (previousIntent == nil){
-            if ([MCViewModel sharedModel].stackSize == STACK_SIZE_DISABLED){
-                NSLog(@"Cannot pop an empty stack because the stack size is set to STACK_SIZE_DISABLED. You should assign [MCViewModel sharedModel].stackSize on startup.");
-            } else if ([MCViewModel sharedModel].stackSize == STACK_SIZE_UNLIMITED){
-                NSLog(@"Navigating back in the history stack too many times. You can check for an empty history stack by inspecting [MCViewModel sharedModel].historyStack.count > 1");
-            } else if ([MCViewModel sharedModel].stackSize > 0){
-                NSLog(@"Cannot pop an empty stack. Perhaps your stack size = %d is too small? You should check [MCViewModel sharedModel].stackSize", [MCViewModel sharedModel].stackSize);
+            if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED){
+                NSLog(@"Cannot pop an empty stack because the stack size is set to STACK_SIZE_DISABLED. You should assign [MCViewManager sharedManager].stackSize on startup.");
+            } else if ([MCViewManager sharedManager].stackSize == STACK_SIZE_UNLIMITED){
+                NSLog(@"Navigating back in the history stack too many times. You can check for an empty history stack by inspecting [MCViewManager sharedManager].historyStack.count > 1");
+            } else if ([MCViewManager sharedManager].stackSize > 0){
+                NSLog(@"Cannot pop an empty stack. Perhaps your stack size = %d is too small? You should check [MCViewManager sharedManager].stackSize", [MCViewManager sharedManager].stackSize);
             } else {
                 NSLog(@"Unexpected stack size. Please ticket this problem to the developers.");
             }
@@ -368,7 +385,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     return intent;
 }
 
--(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName{
+-(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName
+{
     // create global view cache if it doesn't already exist
     if (!dictCacheView){
         dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
@@ -388,21 +406,22 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 // ---------------------------------------------------------------------------------------
 // Adds the intent to the history stack, making sure to keep the stack size bounded
 //
--(void)pushToHistoryStack:(MCIntent*)intent{
-    if ([MCViewModel sharedModel].stackSize == STACK_SIZE_DISABLED){
+-(void)pushToHistoryStack:(MCIntent*)intent
+{
+    if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED){
         // don't save anything to the stack
         return;
-    }else if ([MCViewModel sharedModel].stackSize != STACK_SIZE_UNLIMITED){
+    }else if ([MCViewManager sharedManager].stackSize != STACK_SIZE_UNLIMITED){
         // bound the size
-        NSAssert([MCViewModel sharedModel].stackSize > 0, @"stack size must be positive");
+        NSAssert([MCViewManager sharedManager].stackSize > 0, @"stack size must be positive");
         
-        if ([MCViewModel sharedModel].historyStack.count >= [MCViewModel sharedModel].stackSize  && [MCViewModel sharedModel].historyStack > 0){
-            [[MCViewModel sharedModel].historyStack removeObjectAtIndex:0]; // remove the first object to keep the stack size bounded
+        if ([MCViewManager sharedManager].historyStack.count >= [MCViewManager sharedManager].stackSize  && [MCViewManager sharedManager].historyStack > 0){
+            [[MCViewManager sharedManager].historyStack removeObjectAtIndex:0]; // remove the first object to keep the stack size bounded
         }
     }
     
     // add the new object on the stack
-    [[[MCViewModel sharedModel] historyStack] addObject:intent];
+    [[[MCViewManager sharedManager] historyStack] addObject:intent];
 }
 
 
@@ -410,62 +429,67 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 // Goes back in historyStack "popNum" times.
 // Starting from 1, meaning back to previous intent.
 //
--(MCIntent*)popHistoryStack: (int) popNum{
-  NSAssert([MCViewModel sharedModel].historyStack.count > 0, @"something should be on the stack");
-  
+-(MCIntent*)popHistoryStack: (int) popNum
+{
+    NSAssert([MCViewManager sharedManager].historyStack.count > 0, @"something should be on the stack");
+    
     //Make sure popNum isn't bigger than stack !!
     
-  MCIntent* retIntent = nil;
-  for (int i =0; i <= popNum; i++){
-    if ([MCViewModel sharedModel].historyStack.count > 0 && i != popNum){
-      [[MCViewModel sharedModel].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
-      retIntent = [[MCViewModel sharedModel].historyStack lastObject];
-    } else {
-      return retIntent;
+    MCIntent* retIntent = nil;
+    for (int i =0; i <= popNum; i++){
+        if ([MCViewManager sharedManager].historyStack.count > 0 && i != popNum){
+            [[MCViewManager sharedManager].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
+            retIntent = [[MCViewManager sharedManager].historyStack lastObject];
+        } else {
+            return retIntent;
+        }
     }
-  }
-  
-  return nil; // nothing on the history stack
-}
-
--(MCIntent*)getHistoricalIntentAtIndex: (int) historyNum{
-  NSAssert([MCViewModel sharedModel].historyStack.count > historyNum, @"something should be on the stack");
-  
-  MCIntent* retIntent = nil;
-  
-  retIntent = [[MCViewModel sharedModel].historyStack objectAtIndex: historyNum];
-  
-  [[MCViewModel sharedModel].historyStack removeObjectAtIndex:historyNum];
-  
-//  NSRange r;
-//  r.location = historyNum;
-//  r.length = [[MCViewModel sharedModel].historyStack count] - historyNum;
-//  
-//  [[MCViewModel sharedModel].historyStack removeObjectsInRange: r];
-  
-  return retIntent;
-}
-
-
--(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName{
-  // create global view cache if it doesn't already exist
-  if (!dictCacheView){
-    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
-  }
-
-  // test for existence
-  MCViewController* vc = [dictCacheView objectForKey:sectionOrViewName];
-  if (vc == nil){
-    // create the view controller
-    vc = (MCViewController*) [[MCViewManager sharedManager] createViewController:sectionOrViewName];
-    NSAssert(vc != nil, @"VC should exist");
     
-    [vc onCreate];
-    [dictCacheView setObject:vc forKey:sectionOrViewName];
-  }
+    return nil; // nothing on the history stack
+}
 
-  return vc;
-  
+-(MCIntent*)getHistoricalIntentAtIndex: (int) historyNum
+{
+    NSAssert([MCViewManager sharedManager].historyStack.count > historyNum, @"something should be on the stack");
+    
+    MCIntent* retIntent = nil;
+    
+    retIntent = [[MCViewManager sharedManager].historyStack objectAtIndex: historyNum];
+    
+    [[MCViewManager sharedManager].historyStack removeObjectAtIndex:historyNum];
+    
+    //  NSRange r;
+    //  r.location = historyNum;
+    //  r.length = [[MCViewManager sharedManager].historyStack count] - historyNum;
+    //
+    //  [[MCViewManager sharedManager].historyStack  removeObjectsInRange: r];
+    
+    return retIntent;
+}
+
+
+-(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName
+{
+    // create global view cache if it doesn't already exist
+    if (!dictCacheView)
+    {
+        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    }
+    
+    // test for existence
+    MCViewController* vc = [dictCacheView objectForKey:sectionOrViewName];
+    if (vc == nil)
+    {
+        // create the view controller
+        vc = (MCViewController*) [[MCViewManager sharedManager] createViewController:sectionOrViewName];
+        NSAssert(vc != nil, @"VC should exist");
+        
+        [vc onCreate];
+        [dictCacheView setObject:vc forKey:sectionOrViewName];
+    }
+    
+    return vc;
+    
 }
 
 
@@ -476,7 +500,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 // View may be the same, or may not
 //
 //
--(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent{
+-(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent
+{
     
     // We get the wanted transition
     int transitionStyle = [intent animationStyle];
@@ -645,12 +670,15 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 
 
-- (void)overlayButtonPressed:(id)sender{
-  NSMutableArray* newArray = [NSMutableArray arrayWithArray:screenOverlaySlideshow];
-  if (newArray.count > 0)
-    [newArray removeObjectAtIndex:0];
-  screenOverlaySlideshow = newArray;
-  [self overlaySlideshow:newArray];
+- (void)overlayButtonPressed:(id)sender
+{
+    NSMutableArray* newArray = [NSMutableArray arrayWithArray:screenOverlaySlideshow];
+    if (newArray.count > 0)
+    {
+        [newArray removeObjectAtIndex:0];
+    }
+    screenOverlaySlideshow = newArray;
+    [self overlaySlideshow:newArray];
 }
 
 

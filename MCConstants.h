@@ -1,9 +1,10 @@
 //
 //  MCConstants
-//  Manticore iOSViewFactory
+//  Manticore iOSViewManager
 //
 //  Created by Richard H Fung on July 1, 2013 (Canada Day).
-//  Copyright (c) 2013. All rights reserved.
+//  Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+//  Copyright (c) 2014. All rights reserved.
 //
 
 // special SECTION that goes to the previously seen section and view

@@ -3,7 +3,9 @@
  Manticore iOSViewFactory
  
  Created by Richard Fung on 9/19/12.
- Copyright (c) 2013 Yeti LLC. All rights reserved.
+ Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+ 
+ Copyright (c) 2014 Yeti LLC. All rights reserved.
 
  */
 

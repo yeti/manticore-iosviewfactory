@@ -2,12 +2,12 @@
 //  Manticore iOSViewFactory
 //
 //  Created by Richard Fung on 3/15/13.
-//  Copyright (c) 2013 Yeti LLC. All rights reserved.
+//  Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+//  Copyright (c) 2014 Yeti LLC. All rights reserved.
 //
 
 #import "MCConstants.h"
 #import "MCSectionViewController.h"
 #import "MCViewController.h"
 #import "MCViewManager.h"
-#import "MCViewModel.h"
 #import "MCIntent.h"

@@ -3,7 +3,8 @@
   Manticore iOSViewFactory
 
   Created by Richard Fung on 9/19/12.
-  Copyright (c) 2013 Yeti LLC. All rights reserved.
+  Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+  Copyright (c) 2014 Yeti LLC. All rights reserved.
 
  AppModelIntent is wired through AppModel and handled by MCMainViewController.
  
@@ -25,7 +26,7 @@
  2. [[intent getSavedInstance] setObject:?? forKey:@"viewSpecificKey"]
      Assign any/all view-specific instructions. Read header files for definition.
 
- 3. [[MCViewModel sharedModel] processIntent:intent];
+ 3. [[MCViewManager sharedManager] processIntent:intent];
      Load the section.
 */
 

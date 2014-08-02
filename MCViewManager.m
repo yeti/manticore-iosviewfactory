@@ -2,8 +2,8 @@
 //  MCViewFactory.m
 //  Manticore iOSViewFactory
 //
-//  Created by Richard Fung on 1/31/13.
-//  Copyright (c) 2013 Yeti LLC. All rights reserved.
+//  Created by Philippe Bertin on August 1, 2014
+//  Copyright (c) 2014 Yeti LLC. All rights reserved.
 //
 
 #import "MCViewManager.h"
@@ -18,40 +18,33 @@
 
 
 #pragma mark
-#pragma mark - MCViewManagerEntry class
-
-// -------------------------------------------------------------------------------------------
-// Object representing a registered view : MCViewManagerEntry
-//
-@interface MCViewManagerEntry : NSObject
-@property NSString* nibName;
-@property NSString* className;
-@end
-
-@implementation MCViewManagerEntry
-@synthesize nibName;
-@synthesize className;
-@end
-
-
-#pragma mark
 #pragma mark - MCViewManager class
 
 @interface MCViewManager ()
 
-// Contains all the registered
-@property (strong, nonatomic) NSMutableDictionary* viewControllers;
+// Error dictionary observed by MCMainViewController
+@property(atomic, strong) NSDictionary *errorDict;
+
+// Pointer to the current intent, observed by MCMainViewController
+@property(atomic, strong) MCIntent     *currentIntent;
 
 @end
 
 
 @implementation MCViewManager
 
+
+@synthesize historyStack;
+@synthesize screenOverlay;
+@synthesize screenOverlays;
+
+
 #pragma mark - Initialization
 
 -(id)init{
     if (self = [super init]){
-        _viewControllers = [NSMutableDictionary dictionaryWithCapacity:20];
+        _stackSize = 0;
+        [self clearHistoryStack];
     }
     return self;
 }
@@ -72,47 +65,73 @@
 }
 
 
-#pragma mark - Low-level function
+#pragma mark - View-Controllers related
 
-// -------------------------------------------------------------------------------------------
-// Low-level function that creates and return a ViewController.
-// Does not provide caching and Manticore events (onCreate, ...)
-//
-// Input : name of a sectionViewController or a viewController
-//
--(UIViewController*)createViewController:(NSString*)sectionOrViewName{
-  
-  MCViewManagerEntry* entry = [_viewControllers objectForKey:sectionOrViewName];
-  Class class = NSClassFromString(sectionOrViewName);
-  NSAssert(class != nil, @"You tried to instanciate a Class that does not exists : %@. Class must exist.", sectionOrViewName);
-  
-    // Replace when removing entry class
-  AssertNibExists(entry.nibName);
-  UIViewController* vc = [[class alloc] initWithNibName:entry.nibName bundle:nil] ;
+
+-(UIViewController*)createViewController:(NSString*)sectionOrViewName
+{
+    // Get the class from string
+    Class class = NSClassFromString(sectionOrViewName);
+    
+    // Assert the class exists and the nib file exists
+    NSAssert(class != nil, @"You tried to instanciate a Class that does not exists : %@. Class must exist.", sectionOrViewName);
+    
+    // Assert the nib file exists
+    AssertNibExists(sectionOrViewName);
+    
+    // Create the viewController
+    UIViewController* vc = [[class alloc] initWithNibName:sectionOrViewName bundle:nil] ;
   
 #ifdef DEBUG
-  NSLog(@"Created a view controller %@", [vc description]);
+    NSLog(@"Created a view controller %@", [vc description]);
 #endif
     
   return vc;
 }
 
 
-#pragma mark - View registration
+-(void) processIntent:(MCIntent *)newCurrentIntent
+{
+    [self setCurrentIntent: newCurrentIntent];
+}
 
-// -------------------------------------------------------------------------------------------
-// Each view needs to be registered in order to be managed by Manticore.
-// This method should be called one time for each viewController.
-//
-// Shouldn't it be registerViewController ????????
-// Make a test and not register if already present in array ?????????
-//
--(void)registerView:(NSString*)sectionOrViewName{
-  MCViewManagerEntry* entry = [[MCViewManagerEntry alloc] init];
-  entry.nibName = sectionOrViewName;
-  entry.className = sectionOrViewName;
-  
-  [_viewControllers setObject:entry  forKey:sectionOrViewName];
+
+
+#pragma mark -
+
+
+- (void) clearHistoryStack
+{
+    historyStack = [NSMutableArray arrayWithCapacity:_stackSize];
+}
+
+
+- (void) clearViewCache
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"MCMainViewController_flushViewCache" object:self];
+}
+
+
+#pragma mark -
+
+-(void) setErrorTitle:(NSString*) title andDescription:(NSString*) description
+{
+    if (title == nil)
+        title = @"";
+    
+    if (description == nil)
+        description = @"";
+    
+    [self setErrorDict: [NSDictionary dictionaryWithObjects:@[title, description] forKeys:@[@"title", @"description"]]];
+}
+
+# pragma mark - Setters / Getters
+
+-(void)setStackSize:(int)stackSize
+{
+    // Verify stackSize if >= 0
+    NSAssert(stackSize >= 0, @"Stack size can not be less than 0, you tried to set it at %i", stackSize);
+    _stackSize = stackSize;
 }
 
 

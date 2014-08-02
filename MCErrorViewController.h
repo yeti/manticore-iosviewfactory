@@ -17,7 +17,8 @@
   IBOutlet UILabel *descripLabel;
 }
 
--(void)loadLatestErrorMessage;
+-(void)loadLatestErrorMessageWithDictionary: (NSDictionary *)errorDict;
+
 -(IBAction) dismissError: (id) sender;
 -(IBAction) reportError:(id)sender;
 

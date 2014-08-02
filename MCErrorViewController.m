@@ -7,7 +7,7 @@
 //
 
 #import "MCErrorViewController.h"
-#import "MCViewModel.h"
+#import "MCViewManager.h"
 
 @implementation MCErrorViewController
 
@@ -40,29 +40,28 @@
   [super viewDidUnload];
 }
 
--(void)loadLatestErrorMessage{
-  NSDictionary *errorDict = [[MCViewModel sharedModel] errorDict];
+-(void)loadLatestErrorMessageWithDictionary: (NSDictionary *)errorDict
+{
+    NSString *title = [errorDict objectForKey: @"title"];
+    NSString *description = [errorDict objectForKey: @"description"];
   
-  NSString *title = [errorDict objectForKey: @"title"];
-  NSString *description = [errorDict objectForKey: @"description"];
-  
-  /* RKRestKitError */
-  if ([errorDict objectForKey:@"error"]){
-    NSError* error = [errorDict objectForKey:@"error"];
-    NSArray* arrErrorCodes = [NSArray arrayWithObjects:@"Unknown error",
+    /* RKRestKitError */
+    if ([errorDict objectForKey:@"error"]){
+        NSError* error = [errorDict objectForKey:@"error"];
+        NSArray* arrErrorCodes = [NSArray arrayWithObjects:@"Unknown error",
                               @"The app is experiencing a remote connection problem (91).", // RKObjectLoaderRemoteSystemError
                               @"The app is not connected to the Internet (92).", //RKRequestBaseURLOfflineError
                               @"The app is having trouble talking to the cloud (93).",// RKRequestUnexpectedResponseError
                               @"The app is having trouble talking to the cloud (94).",//RKObjectLoaderUnexpectedResponseError
                               @"The cloud is taking too much time to connect (95).",//RKRequestConnectionTimeoutError
                               nil];
-    if ([error code] >= 0 && [error code] < [arrErrorCodes count]) {
-      description = [arrErrorCodes objectAtIndex:[error code]];
+        if ([error code] >= 0 && [error code] < [arrErrorCodes count]) {
+            description = [arrErrorCodes objectAtIndex:[error code]];
+        }
     }
-  }
   
-  titleLabel.text = title;
-  descripLabel.text =  [NSString stringWithFormat:@"%@\n\n\n\n\n\n\n\n\n\n\n\n\n\n",description];
+    titleLabel.text = title;
+    descripLabel.text =  [NSString stringWithFormat:@"%@\n\n\n\n\n\n\n\n\n\n\n\n\n\n",description];
 }
 
 -(IBAction) dismissError: (id) sender {
