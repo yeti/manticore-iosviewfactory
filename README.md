@@ -361,17 +361,25 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
 * Refactoring :
   * Now comply with ARC
   * No more iVar direct manipulation
-  * 
+  * `MCViewFactory` and `MCViewModel` merged into `MCViewManager` 
+  * No need to register the MCViewControllers anymore
+  * Small improvements on keeping model & controller separated
   
 * Renaming : 
-  * `MCViewFactory` becomes `MCViewManager`  
-  * 
+  *  
   
 * Class changes :
   * MCViewManager :
     * Removed `registerView: andNibName:` function
     * Removed `MCViewManagerEntry` (upper function needed it)
-    * 
+    *
+
+* Depreciated :
+  * MCViewManager's `setCurrentSection` replaced by `processIntent`
+  * 
+
+* Bug fixes :
+  * Pop transition from a section's view to previous section's last opened view. Bug would cause the "new" view to appear on top of lastView when transitioning causing weird undesired effect.  
 
 
 ### Previous releases
