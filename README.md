@@ -102,7 +102,7 @@ MCIntent* intent = [MCIntent intentWithSectionName:@"Section1VC" andViewName:@"V
 
 ##Sections and Views
 
-######Understanding the concept
+#####Understanding the concept
 
 When developping an application you will usually want to group the View-Controllers. As an example, if you were to develop a social app, you could want to group the VCs into these :
 
@@ -118,7 +118,7 @@ Sections can be seen as a way of organizing your application's views (or as tabs
 Both are sub-classes of `UIViewController`.
 
 
-###### Using a tabbed application
+##### Using a tabbed application
 
 **Sections** should correspond to user interface's tabs and **views** should correspond to the views inside a tab.
 
@@ -130,7 +130,7 @@ NOTE: I haven't tested a single-level hierarchy with all sections and no views.
 
 
 
-###### Stay organized !
+##### Stay organized !
 
 We highly suggest making macros for all your sections and views' names. You can do so in the appModel class if you have one, or in a separate header file.  
 This way, it will help to avoid making mistakes when making intents on these View-Controllers. Plus, if you ever rename a class, you only have to change the name on the macro instead of multiple times. Most of all... auto-completion is always nice ;)
@@ -157,8 +157,21 @@ MCIntent* intent = [MCIntent intentWithSectionName:SECTION_FIRST andViewName:VIE
 
 
 
-Intents and events
-------------------
+##Intents
+
+
+###Making an intent
+
+When you want to switch from one View-Controller to another, you have to *make an intent*, using the **MCIntent class**. Do not instanciate intents directly, instead use the provided class methods. These provide many ways for creating intents to go to the right View-Controller (or to create it).   
+    
+Here are all the available possibilities :
+
+  *frfr
+  *fre
+
+###Transition to the intent
+
+
 
 ### Sending an intent
 
