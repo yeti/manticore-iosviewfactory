@@ -164,10 +164,25 @@ MCIntent* intent = [MCIntent intentWithSectionName:SECTION_FIRST andViewName:VIE
 
 When you want to switch from one View-Controller to another, you have to *make an intent*, using the **MCIntent class**. Do not instanciate intents directly, instead use the provided class methods. These provide many ways for creating intents to go to the right View-Controller (or to create it).   
     
-Here are all the available possibilities :
+Here is a list of all possible intents :
 
-  *frfr
-  *fre
+1. Intent to create a new Section or View in Section. View-Controller will be added to the history stack.   
+   
+   | View1 | View2 | &nbsp;&nbsp;  &#10549;  
+   | View1 | View2 | newView |  
+
+    ```objc
+    // You should avoid creating section without view
+    +(id) intentWithSectionName: (NSString*) name;
+
+    // Most commonly used method. Creates a View, associated with a Section.
+    +(id) intentWithSectionName: (NSString*) sectionName andViewName: (NSString*) viewName;
+    ```
+
+
+
+2. fre
+
 
 ###Transition to the intent
 
