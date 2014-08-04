@@ -4,8 +4,8 @@
 
 ##Overview
 
-**Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about managing your different View-Controllers.       
-Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications although it will help you in the making of any type of application.      
+**Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about the View-Controllers' management.       
+Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications, although it will help in the making of any type of application.      
 
 
 **Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
@@ -56,7 +56,7 @@ Wherever you are using Manticore, importing `ManticoreViewFactory.h` will provid
 
 ###### Create your View-Controllers : Sub-class *MCSectionViewController* or *MCViewController*
 
-Here, we will create one section with two views. The section has to sub-class *MCSectionViewController* and the view has to sub-class *MCViewController*. Create these classes with their .xib (nib) associated.
+We will create one section with two views. Section have to sub-class *MCSectionViewController* and views have to sub-class *MCViewController*. Create these classes with their .xib (nib) associated.
 
 ```objc
 // Section1VC.h 
