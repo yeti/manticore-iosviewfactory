@@ -11,11 +11,11 @@ Designed with a two-level hierarchical view controller structure, *manticore-ios
 **Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
 
 
-**Simplicity is key ** :
+**Simplicity is key :**
 
 1. Make an intent : create a VC, go to a specific VC, pop the last 3 VCs... endless possibilities.
-2. Process the intent with a unique method.
-3. That's it !
+2. Process the intent with the help of a unique method.
+3. Relax and let manticore do the hard work for you !
 
 
 ##Installation
