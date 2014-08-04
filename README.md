@@ -169,8 +169,8 @@ Here is a list of all possible intents :
 1. Intent to create a new Section or View in Section. 
    When intent is processed, the related View-Controller will be added to the history stack.   
    
-   | View1 | View2 | &nbsp;&nbsp;  &#10549;  
-   | View1 | View2 | newView |  
+   >| View1 | View2 | &nbsp;&nbsp;  &#10549;  
+   >| View1 | View2 | newView |  
 
     ```objc
     // You should avoid creating section without view
@@ -183,9 +183,14 @@ Here is a list of all possible intents :
 2. Intent to find an intent in the history stack and POP to it.
    (go back in history stack until finding the one : popping others while parsing the stack)
 
-   | View1 | **View2** | View3 | View4 |    
-   | View1 | **View2** | View3 |  &nbsp;&nbsp;  &#10550;    
-   | View1 | **View2**   &nbsp;&nbsp;  &#10550;     
+   >| View1 | **View2** | View3 | View4 |    
+   >| View1 | **View2** | View3 |  &nbsp;&nbsp;  &#10550;    
+   >| View1 | **View2**   &nbsp;&nbsp;  &#10550;     
+
+    ```objc
+    // You should avoid creating section without view
+    +(id) pop: (NSString*) name;
+    ```
 
 ###Transition to the intent
 
@@ -387,7 +392,10 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
   * MCViewManager :
     * Removed `registerView: andNibName:` function
     * Removed `MCViewManagerEntry` (upper function needed it)
-    *
+    
+  * MCIntent :
+    * Section name included in dictionary
+    * New intents
 
 * Depreciated :
   * MCViewManager's `setCurrentSection` replaced by `processIntent`
