@@ -1,13 +1,22 @@
 #Welcome to Manticore iOS View Manager
-    
-        
-        
+
+
+
 ##Overview
 
 **Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about managing your different View-Controllers.       
 Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications although it will help you in the making of any type of application.      
 
-**Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html) : treating views as activities.
+
+**Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
+
+
+**Simplicity is key ** :
+
+1. Make an intent : create a VC, go to a specific VC, pop the last 3 VCs... endless possibilities.
+2. Process the intent with a unique method.
+3. That's it !
+
 
 ##Installation
 
