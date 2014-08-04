@@ -166,7 +166,8 @@ When you want to switch from one View-Controller to another, you have to *make a
     
 Here is a list of all possible intents :
 
-1. Intent to create a new Section or View in Section. View-Controller will be added to the history stack.   
+1. Intent to create a new Section or View in Section. 
+   When intent is processed, the related View-Controller will be added to the history stack.   
    
    | View1 | View2 | &nbsp;&nbsp;  &#10549;  
    | View1 | View2 | newView |  
@@ -179,10 +180,12 @@ Here is a list of all possible intents :
     +(id) intentWithSectionName: (NSString*) sectionName andViewName: (NSString*) viewName;
     ```
 
+2. Intent to find an intent in the history stack and POP to it.
+   (go back in history stack until finding the one : popping others while parsing the stack)
 
-
-2. fre
-
+   | View1 | **View2** | View3 | View4 |    
+   | View1 | **View2** | View3 |  &nbsp;&nbsp;  &#10550;    
+   | View1 | **View2**   &nbsp;&nbsp;  &#10550;     
 
 ###Transition to the intent
 
