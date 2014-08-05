@@ -4,8 +4,9 @@
 
 ##Overview
 
-**Manticore-iosviewmanager** is a ViewControllers Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about the View-Controllers' management.       
-Designed with a two-level hierarchical view controller structure, *manticore-iosviewmanager* is ideal for creating tabbed applications, although it will help in the making of any type of application.      
+**Manticore-iosviewmanager** is a ViewController Management pattern for all iOS apps. It aims at making the creation of iOS applications easier, by not having to care about the View-Controllers' management.      
+
+**manticore-iosviewmanager** will help in the making of any type of application although its two-level hierarchical view controller structure design is ideal for creating tabbed applications.      
 
 
 **Manticore-iosviewmanager** was inspired by the [Android activity lifecycle](http://developer.android.com/training/basics/activity-lifecycle/pausing.html).
@@ -15,7 +16,7 @@ Designed with a two-level hierarchical view controller structure, *manticore-ios
 
 1. Make an intent to create a VC,to go to a specific VC, to pop the last 3 VCs... possibilities are endless.
 2. Process the intent with the help of a unique method.
-3. Relax and let manticore do the hard work for you !
+3. Relax and let manticore do the hard work of managing the View-Controllers for you !
 
 
 ##Installation
@@ -45,6 +46,11 @@ Features included with this release:
 
 
 ##Getting started : basic usage
+
+-----
+**Important note :** In Manticore, `Sections` and `Views` are `ViewControllers`.
+
+-----
 
 ###### Import Manticore
 Wherever you are using Manticore, importing `ManticoreViewFactory.h` will provide your file with all the necessary classes. 
@@ -395,7 +401,7 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
     
   * MCIntent :
     * Section name included in dictionary
-    * New intents
+    * New choice of intents
 
 * Depreciated :
   * MCViewManager's `setCurrentSection` replaced by `processIntent`
