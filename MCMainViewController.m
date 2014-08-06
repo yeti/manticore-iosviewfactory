@@ -7,11 +7,13 @@
 //  Copyright (c) 2014 Yeti LLC. All rights reserved.
 //
 
+
 #import "MCViewController.h"
 #import "MCErrorViewController.h"
 #import "MCMainViewController.h"
 #import "MCSectionViewController.h"
 #import "MCViewManager.h"
+#import "MCIntent.h"
 
 
 
@@ -145,24 +147,24 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 //
 - (void) goToIntent: (MCIntent*) intent {
     
-    /* 1. handle the history stack */
+    // 1. handle the history stack
     intent = [self loadIntentAndHandleHistoryStack:intent];
     if (!intent)
         return;
     
-    /* load the appropriate section from cache */
+    // Load/create the appropriate section associated with intent
     MCSectionViewController* sectionVC =  (MCSectionViewController*)  [self loadOrCreateViewController:[intent sectionName]];
-    NSAssert([sectionVC isKindOfClass:[MCSectionViewController class]], @"sections should be subclasses of MCSectionViewController");
+    NSAssert([sectionVC isKindOfClass:[MCSectionViewController class]], @"Your section %@ should subclass MCSectionViewController", [sectionVC description]);
     
     
-    // Load appropriate view-controller associated with intent
+    // Load/create appropriate View associated with intent
     MCViewController* vc = nil;
     if ([intent viewName])
     {
         vc = (MCViewController*) [self loadOrCreateViewController:[intent viewName]];
         
         // Add that it shouldn't a MCSectionViewController which subclasses MCViewController
-        NSAssert([vc isKindOfClass:[MCViewController class]], @"views should be subclasses of MCViewController");
+        NSAssert([vc isKindOfClass:[MCViewController class]], @"Your view %@ should subclasses MCViewController", [vc description]);
         
         /* edge case: everything we are transitioning to is the same as the previous, need to create a new view */
         // Same section same view
@@ -170,7 +172,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         {
             vc = (MCViewController*) [self forceLoadViewController:[intent viewName]];
         }
-    } else {
+    }
+    else
+    {
         /* edge case: transitioning from itself to itself, need to create a new view */
         if (sectionVC == currentSectionVC){
             sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
@@ -296,22 +300,72 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     
 }
 
-# pragma mark - Helper methods
-# pragma mark  Load intent helper methods
 
 
-// ----------------------------------------------------------------------------------------
-// Handles intent and maintains the history stack
-//
+#pragma mark - History Stack helper methods
+
+
+//---------------------------------------------------------------------------
+// Keys for private members : SectionName, ViewName and AnimationStyle in savedInstanceState Dictionary
+#define kSectionName    @"__SectionName__"
+#define kViewName       @"__ViewName__"
+#define kAnimationStlye @"__AnimationStyle__"
+// If intent is dynamic, its savedInstanceState will contain a dictionary for key kSearchInfos
+#define kSearchInfos    @"__SearchInfos__"
+#define kType           @"__Type__"
+
+
+/**
+ * This method loads the intent if dynamic request,
+ * it also maintains the history stack.
+ * @discussion For dynamic requests :
+ * @discussion 1. Get savedInfos from intent
+ * @discussion 2. Get a pointer to the intent we are looking for
+ * @discussion 3. Populate the found intent with savedInfos
+ * @discussion For Static intents : putIntentOnTopOfHistoryStack
+ *
+ */
 -(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent
 {
+    // We first look if the intent is dynamic (-> need to find corresponding intent in history stack)
+    if ([intent.savedInstanceState objectForKey:kSearchInfos])
+    {
+        // We will work on the dictionary to find the right method to apply to intent
+        NSDictionary *searchInfos = [intent.savedInstanceState objectForKey:kSearchInfos];
+        
+        // We either want to make a pop or a push
+        // Case push
+        if ([[searchInfos objectForKey:kType] isEqualToString:@"push"])
+        {
+            
+        }
+        // Case pop
+        else if ([[searchInfos objectForKey:kType] isEqualToString:@"pop"])
+        {
+            
+        }
+        else NSLog(@"Key for searchInfos is %@ : BUG in %s", [searchInfos objectForKey:kType], __func__);
+    }
+    
+    // Intent is static, we can handle the intent as is
+    else
+    {
+        // build the history stack
+        //[self putIntentOnTopOfHistoryStack:intent];
+    }
+    
+    //return intent;
+    
+    
     
     /* Handles SECTION_LAST (->1) &  SECTION_REWIND (->2) */
     /*----------------------------------------------------*/
-    if ([[intent sectionName] isEqualToString:SECTION_LAST] || [[intent sectionName] isEqualToString:SECTION_REWIND]) {
+    if ([[intent sectionName] isEqualToString:SECTION_LAST] || [[intent sectionName] isEqualToString:SECTION_REWIND])
+    {
         // Here we want to keep the savedInstanceState, without the SECTION or VIEW
         NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
-        [savedState removeObjectForKey:@"viewName"]; // unusual design decision, sectionName is not saved in the savedState object
+        [savedState removeObjectForKey:kViewName];
+        [savedState removeObjectForKey:kSectionName];
         
         // when  copying state values from the given intent, e.g., animation transition, to the old bundle
         int popNum = 1;
@@ -335,13 +389,10 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
             }
         }
 #endif
-        NSAssert(previousIntent != nil, @"Cannot pop an empty history stack.");
         
-        // Assert just before ... remove this
-        if (previousIntent == nil){
-            // default behaviour is to stop changing intents, the current intent is set to an improper state
+        NSAssert(previousIntent != nil, @"Cannot pop an empty history stack.");
+        if (previousIntent == nil)
             return nil;
-        }
         
         // replace the intent on the history stack
         [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
@@ -350,72 +401,62 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     
     /*          Handles SECTION_HISTORICAL (->1+)         */
     /*----------------------------------------------------*/
-    else if([[intent sectionName] isEqualToString:SECTION_HISTORICAL]) {
-      
-      //we need to load the intent that is in this position in our history stack
-      NSNumber *historyNum = [intent.savedInstanceState objectForKey: @"historyNumber"];
-      
-      MCIntent* previousIntent = [self getHistoricalIntentAtIndex: [historyNum intValue]];
-      
-      if (previousIntent == nil){
-        // default behaviour is to stop changing intents, the current intent is set to an improper state
-        return nil;
-      }
-      
-      //removing the view name makes it so that the observer method doesnt try to create a new one
-      
-      NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
-      [savedState removeObjectForKey:@"viewName"];
-      [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
-      
-      [self pushToHistoryStack:previousIntent];
-      
-      //this process will grab the historical view, put it on top of the stack and remove it from its old location
-      //the potential situation could happen where we want to jump back and remove everything since then
-      //in that case we should create another similar workflow using a seperate SECTION constant called REVERT or something
-      //maybe this workflow could change to REUSE
-      
-      return previousIntent;
-      
-    } else {
+    else if([[intent sectionName] isEqualToString:SECTION_HISTORICAL])
+    {
+        
+        //we need to load the intent that is in this position in our history stack
+        NSNumber *historyNum = [intent.savedInstanceState objectForKey: @"historyNumber"];
+        
+        MCIntent* previousIntent = [self getHistoricalIntentAtIndex: [historyNum intValue]];
+        
+        if (previousIntent == nil){
+            // default behaviour is to stop changing intents, the current intent is set to an improper state
+            return nil;
+        }
+        
+        //removing the view name makes it so that the observer method doesnt try to create a new one
+        
+        NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
+        [savedState removeObjectForKey:kSectionName];
+        [savedState removeObjectForKey:kViewName];
+        
+        [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
+        
+        [self putIntentOnTopOfHistoryStack:previousIntent];
+        
+        //this process will grab the historical view, put it on top of the stack and remove it from its old location
+        //the potential situation could happen where we want to jump back and remove everything since then
+        //in that case we should create another similar workflow using a seperate SECTION constant called REVERT or something
+        //maybe this workflow could change to REUSE
+        
+        return previousIntent;
+        
+    } else
+    {
         // build the history stack
-        [self pushToHistoryStack:intent];
+        [self putIntentOnTopOfHistoryStack:intent];
     }
     
     return intent;
 }
 
--(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName
-{
-    // create global view cache if it doesn't already exist
-    if (!dictCacheView){
-        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
-    }
-    
-    // create the view controller
-    MCViewController* vc = (MCViewController*) [[MCViewManager sharedManager] createViewController:sectionOrViewName];
-    NSAssert(vc != nil, @"VC should exist");
-    [vc onCreate];
-    
-    //
-    [dictCacheView setObject:vc forKey:sectionOrViewName];
-    return vc;
-}
-
 
 // ---------------------------------------------------------------------------------------
-// Adds the intent to the history stack, making sure to keep the stack size bounded
+// Puts the intent on top of the history stack, making sure to keep the stack size bounded
 //
--(void)pushToHistoryStack:(MCIntent*)intent
+-(void)putIntentOnTopOfHistoryStack:(MCIntent*)intent
 {
-    if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED){
+    if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED)
+    {
         // don't save anything to the stack
         return;
-    }else if ([MCViewManager sharedManager].stackSize != STACK_SIZE_UNLIMITED){
+    }else if ([MCViewManager sharedManager].stackSize != STACK_SIZE_UNLIMITED)
+    {
         // bound the size
         NSAssert([MCViewManager sharedManager].stackSize > 0, @"stack size must be positive");
         
-        if ([MCViewManager sharedManager].historyStack.count >= [MCViewManager sharedManager].stackSize  && [MCViewManager sharedManager].historyStack > 0){
+        if ([MCViewManager sharedManager].historyStack.count >= [MCViewManager sharedManager].stackSize  && [MCViewManager sharedManager].historyStack > 0)
+        {
             [[MCViewManager sharedManager].historyStack removeObjectAtIndex:0]; // remove the first object to keep the stack size bounded
         }
     }
@@ -423,6 +464,74 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     // add the new object on the stack
     [[[MCViewManager sharedManager] historyStack] addObject:intent];
 }
+
+
+#pragma mark Push helpers
+
+/**
+ * We know which intent we want to push.
+ * We have to find it in the stack, remove it, add it on top
+ *
+ */
+-(MCIntent *)pushIntentFromHistory:(MCIntent *)intent
+{
+    NSAssert([MCViewManager sharedManager].historyStack.count > 0, @"%s : something should be on the stack", __func__);
+    BOOL found = false;
+    
+    // Try to find matching intent in historyStack
+    for (int i=0; i<[MCViewManager sharedManager].historyStack.count; i++)
+    {
+        if (intent == [[MCViewManager sharedManager].historyStack objectAtIndex:i])
+        {
+            [[MCViewManager sharedManager].historyStack removeObjectAtIndex:i];
+            found = true;
+            break;
+        }
+    }
+    
+    NSAssert(found, @"You tried to pushToIntentInHistory but provided Intent couldn't be found : %@", [intent description]);
+    
+    // We can put it on top
+    [[MCViewManager sharedManager].historyStack addObject:intent];
+    
+    return intent;
+}
+
+
+/**
+ * We know where is the Intent (by it's position in the stack)
+ * We have to find it in the stack, remove it, add it on top.
+ * @discussion number = 1 means last intent
+ *
+ */
+-(MCIntent *)pushIntentFromHistoryByNumber:(int)numberInHistory
+{
+#warning make sure NSAssert is good
+    NSAssert([MCViewManager sharedManager].historyStack.count > numberInHistory, @"%s : something should be on the stack", __func__);
+    
+    // We first have to transform numberInHistory to position in stack -> (array count - numberInHistory - 1)
+    int indexInStack = [MCViewManager sharedManager].historyStack.count - numberInHistory - 1;
+    
+    // Get the intent, then delete it then put it on top
+    MCIntent *foundIntent = [[MCViewManager sharedManager].historyStack objectAtIndex:indexInStack];
+    [[MCViewManager sharedManager].historyStack removeObjectAtIndex:indexInStack];
+    [[MCViewManager sharedManager].historyStack addObject:foundIntent];
+    
+    return foundIntent;
+}
+
+/**
+ * We know the name of the ViewController, let's find the corresponding intent
+ * We have to find it in the stack, remove it, add it on top.
+ *
+ */
+-(MCIntent *)pushIntentFromHistoryByName:(NSString *)viewName
+{
+    
+}
+
+
+#pragma mark Pop helpers
 
 
 // ---------------------------------------------------------------------------------------
@@ -433,18 +542,19 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 {
     NSAssert([MCViewManager sharedManager].historyStack.count > 0, @"something should be on the stack");
     
-    //Make sure popNum isn't bigger than stack !!
-    
     MCIntent* retIntent = nil;
-    for (int i =0; i <= popNum; i++){
-        if ([MCViewManager sharedManager].historyStack.count > 0 && i != popNum){
+    for (int i =0; i <= popNum; i++)
+    {
+        if ([MCViewManager sharedManager].historyStack.count > 0 && i != popNum)
+        {
             [[MCViewManager sharedManager].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
             retIntent = [[MCViewManager sharedManager].historyStack lastObject];
-        } else {
+        }
+        else
+        {
             return retIntent;
         }
     }
-    
     return nil; // nothing on the history stack
 }
 
@@ -466,6 +576,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     
     return retIntent;
 }
+
+
+#pragma mark - View-Controllers related
 
 
 -(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName
@@ -492,6 +605,22 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     
 }
 
+-(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName
+{
+    // create global view cache if it doesn't already exist
+    if (!dictCacheView){
+        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    }
+    
+    // create the view controller
+    MCViewController* vc = (MCViewController*) [[MCViewManager sharedManager] createViewController:sectionOrViewName];
+    NSAssert(vc != nil, @"VC should exist");
+    [vc onCreate];
+    
+    //
+    [dictCacheView setObject:vc forKey:sectionOrViewName];
+    return vc;
+}
 
 
 // ----------------------------------------------------------------------------------------

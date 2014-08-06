@@ -72,13 +72,6 @@
 
 
 //--------------------------------------------------------------------------------
-//** DEPRECIATED ** PLEASE USE : - (void)processIntent:(MCIntent *)newCurrentIntent;
-//
-//
-- (void)setCurrentSection: (MCIntent *)currentIntent __deprecated;
-
-
-//--------------------------------------------------------------------------------
 // Clear the history of intents
 //
 - (void)clearHistoryStack;
