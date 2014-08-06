@@ -168,7 +168,6 @@
 }
 
 
-
 #pragma mark - Private initialization methods
 
 -(id) initWithSectionName: (NSString*)name
