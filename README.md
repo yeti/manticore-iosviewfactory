@@ -392,16 +392,20 @@ Define `DEBUG` in compile settings to show debugger messages. `NSAssert` message
   * Small improvements on keeping model & controller separated
   
 * Renaming : 
-  *  
+  * `MCIntent` becomes `MCActivity` to conform with android model and to make more sense
   
 * Class changes :
   * MCViewManager :
     * Removed `registerView: andNibName:` function
     * Removed `MCViewManagerEntry` (upper function needed it)
     
-  * MCIntent :
+  * MCActivity :
     * Section name included in dictionary
-    * New choice of intents
+    * New choices of intents
+    * `viewName` becomes `associatedViewName`
+    * `sectionName` becomes `associatedSectionName`
+    * `animationStyle` becomes `transitionAnimationStyle`
+    * `savedInstanceState` becomes `activityInfos`
 
 * Depreciated :
   * MCViewManager's `setCurrentSection` replaced by `processIntent`
