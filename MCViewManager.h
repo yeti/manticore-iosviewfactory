@@ -8,19 +8,20 @@
 
 #import <Foundation/Foundation.h>
 #import "MCConstants.h"
-#import "MCIntent.h"
+#import "MCActivity.h"
 
 
 
 /*
 //  MCViewManager is responsible for managing and processing the
 //      application's view-controllers. Whenever possible, you 
-//      should use intents. If you can not for some reason,
+//      should use Activities to handle your View-Controllers. 
+//      If you can not for some reason,
 //      a method is provided to you for easy VC creation.
 //
 //  You should use this class to manage your view-controllers :
 //
-//      - Process an intent pointing to your desired VC
+//      - Process an Activity pointing to your desired VC
 //      - Clear the VCs cache
 //      - Clear your view-controller's history stack
 //      - Show error-messages
@@ -40,7 +41,7 @@
 // May be suffixed by _5 for iPhone 5 screen size overlay.
 @property(atomic, strong) NSArray           *screenOverlays;
 
-// Saved intents on the history stack. Do not change this variable directly.
+// Saved Activities on the history stack. Do not change this variable directly.
 @property(atomic, strong) NSMutableArray    *historyStack;
 
 // Valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0.
@@ -49,30 +50,33 @@
 
 
 
-// ------------------------------------------------------------------
-// Get the singleton instance.
-//
+/*!
+ * @return The Singleton instance
+ *
+ */
 +(MCViewManager*)sharedManager;
 
 
-// ------------------------------------------------------------------
-// Low-level function that creates and return a ViewController.
-// Does not provide caching and Manticore events (onCreate, ...)
-//
-// Input : name of a View-Controller owning a nib file.
-//
+/*!
+ * Low-level function for creating View-Controllers that won't be managed by Activities.
+ * Does not provide caching and Activities events (onCreate, onResume...)
+ *
+ * @param sectionOrViewName Name of the UIViewController sub-class owning the nib file. Nib file must have the same name as the class.
+ * @return The created View-Controller
+ *
+ */
 -(UIViewController*)createViewController:(NSString*)sectionOrViewName;
 
 
 //--------------------------------------------------------------------------------
-// Will process the given intent and place it as first responder
-// Setting of the currentIntent needs to be wrapped in case we ever need to make changes again
+// Will process the given Activity and place it as first responder
+// Setting of the currentActivity needs to be wrapped in case we ever need to make changes again
 //
-- (void)processIntent:(MCIntent *)newCurrentIntent;
+- (void)processActivity:(MCActivity *)newCurrentActivity;
 
 
 //--------------------------------------------------------------------------------
-// Clear the history of intents
+// Clear the history of Activities
 //
 - (void)clearHistoryStack;
 

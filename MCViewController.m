@@ -16,12 +16,12 @@
   
 }
 
--(void)onResume:(MCIntent*)intent
+-(void)onResume:(MCActivity*)activity
 {
   self.debugTag = YES;
 }
 
--(void)onPause:(MCIntent*)intent
+-(void)onPause:(MCActivity*)activity
 {
   self.debugTag = YES;
 }

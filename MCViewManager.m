@@ -25,8 +25,8 @@
 // Error dictionary observed by MCMainViewController
 @property(atomic, strong) NSDictionary *errorDict;
 
-// Pointer to the current intent, observed by MCMainViewController
-@property(atomic, strong) MCIntent     *currentIntent;
+// Pointer to the current Activity, observed by MCMainViewController
+@property(atomic, strong) MCActivity     *currentActivity;
 
 @end
 
@@ -90,9 +90,9 @@
 }
 
 
--(void) processIntent:(MCIntent *)newCurrentIntent
+-(void) processActivity:(MCActivity *)newCurrentActivity
 {
-    [self setCurrentIntent: newCurrentIntent];
+    [self setCurrentActivity: newCurrentActivity];
 }
 
 

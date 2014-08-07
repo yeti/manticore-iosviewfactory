@@ -12,7 +12,7 @@
 #define SECTION_REWIND  @"__MCRewindViewController__"
 
 //special SECTION that will trigger scanning for "historyNumber"
-//meant to retrieve a specific intent in the history stack
+//meant to retrieve a specific Activity in the history stack
 #define SECTION_HISTORICAL  @"__MCHistoricalViewController__"
 
 // built in VIEWs that can be overriden by the user

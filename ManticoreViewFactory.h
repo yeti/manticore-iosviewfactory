@@ -10,4 +10,4 @@
 #import "MCSectionViewController.h"
 #import "MCViewController.h"
 #import "MCViewManager.h"
-#import "MCIntent.h"
+#import "MCActivity.h"

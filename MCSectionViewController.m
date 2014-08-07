@@ -46,22 +46,22 @@
 }
 
 
--(void)onResume:(MCIntent *)intent
+-(void)onResume:(MCActivity *)activity
 {
-  [super onResume:intent];
+  [super onResume:activity];
   
   if (currentViewVC) {
-    [currentViewVC onResume:intent];
+    [currentViewVC onResume:activity];
   }
 }
 
--(void)onPause:(MCIntent *)intent
+-(void)onPause:(MCActivity *)activity
 {
     if (currentViewVC){
-        [currentViewVC onPause:intent];
+        [currentViewVC onPause:activity];
     }
     
-    [super onPause:intent];
+    [super onPause:activity];
 }
 
 @end

@@ -13,7 +13,8 @@
 #import "MCMainViewController.h"
 #import "MCSectionViewController.h"
 #import "MCViewManager.h"
-#import "MCIntent.h"
+#import "MCActivity.h"
+
 
 
 
@@ -30,7 +31,17 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
   }
 }
 
+
+
+
 @interface MCMainViewController ()
+
+@property (strong, nonatomic, readwrite) NSMutableDictionary *dictCacheView;
+@property (strong, nonatomic, readwrite) MCErrorViewController* errorVC;
+@property (strong, nonatomic, readwrite) MCSectionViewController* currentSectionVC;
+@property (strong, nonatomic, readwrite) MCActivity* activeActivity;
+@property (strong, nonatomic, readwrite) UIButton* screenOverlayButton;
+@property (strong, nonatomic, readwrite) NSArray* screenOverlaySlideshow;
 
 @end
 
@@ -46,7 +57,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     if (self) {
         // Custom initialization
         // register to listeners on model changes
-        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"currentIntent" options: NSKeyValueObservingOptionNew context: nil];
+        [[MCViewManager sharedManager] addObserver:self forKeyPath:@"currentActivity" options: NSKeyValueObservingOptionNew context: nil];
         [[MCViewManager sharedManager] addObserver:self forKeyPath:@"errorDict" options: NSKeyValueObservingOptionNew context: nil];
         [[MCViewManager sharedManager] addObserver:self forKeyPath:@"screenOverlay" options: NSKeyValueObservingOptionNew context: nil];
         [[MCViewManager sharedManager] addObserver:self forKeyPath:@"screenOverlays" options: NSKeyValueObservingOptionNew context: nil];
@@ -67,55 +78,55 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
   
-    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
 // Selector called when MCViewManager flushViewCache's method is called.
 -(void)flushViewCache:(NSNotification *)notification
 {
-    dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
 // ----------------------------------------------------------------------------
 // Modified value changes are observed from MCViewManager :
-//      - currentIntent
+//      - currentActivity
 //      - errorDict
 //      - screenOverlay
 //      - screenOverlays
 //
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"currentIntent"])
+    if ([keyPath isEqualToString:@"currentActivity"])
     {
         manticore_runOnMainQueueWithoutDeadlocking(^{
-            [self goToIntent:[object valueForKeyPath:keyPath]];
+            [self goToActivity:[object valueForKeyPath:keyPath]];
         });
     
     } else if ([keyPath isEqualToString:@"errorDict"])
     {
         manticore_runOnMainQueueWithoutDeadlocking(^{
-            if (!errorVC)
+            if (!_errorVC)
             {
 #warning deal with custom error controllers
-                errorVC = (MCErrorViewController*) [[MCViewManager sharedManager] createViewController:VIEW_BUILTIN_ERROR];
+                _errorVC = (MCErrorViewController*) [[MCViewManager sharedManager] createViewController:VIEW_BUILTIN_ERROR];
             }
             
             // remove from the previous
-            [errorVC.view removeFromSuperview];
-            [errorVC removeFromParentViewController];
+            [_errorVC.view removeFromSuperview];
+            [_errorVC removeFromParentViewController];
 
             // set up
-            [errorVC loadLatestErrorMessageWithDictionary:[object valueForKeyPath:keyPath]];
+            [_errorVC loadLatestErrorMessageWithDictionary:[object valueForKeyPath:keyPath]];
 
             // add to the current
-            [errorVC.view setFrame:[self.view bounds]];
-            [self.view addSubview: errorVC.view];
+            [_errorVC.view setFrame:[self.view bounds]];
+            [self.view addSubview: _errorVC.view];
 
-            [currentSectionVC.currentViewVC.view resignFirstResponder];
-            [currentSectionVC.view resignFirstResponder];
+            [_currentSectionVC.currentViewVC.view resignFirstResponder];
+            [_currentSectionVC.view resignFirstResponder];
 
 
-            [errorVC becomeFirstResponder]; // make the error dialog the first responder
+            [_errorVC becomeFirstResponder]; // make the error dialog the first responder
           
         });
   
@@ -142,114 +153,118 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 # pragma mark - Callback methods
 
 // -------------------------------------------------------------------------------
-// Callback method for transitioning to a new intent
-// 1.
+// Callback method for transitioning to a new Activity
+// 1. Handle the History Stack
+// 2. Load/create the appropriate section associated with the activity
+// 3. Load/create appropriate View associated with the activity
+// 3.1. Activity is only associated with a Section
+// 4. Propagation of onPause to the active Activity's childView before transitionning (-> for saving changes to previous activity)
 //
-- (void) goToIntent: (MCIntent*) intent {
+//
+- (void) goToActivity: (MCActivity*) activity {
     
-    // 1. handle the history stack
-    intent = [self loadIntentAndHandleHistoryStack:intent];
-    if (!intent)
+    // 1.
+    activity = [self loadActivityAndHandleHistoryStack:activity];
+    if (!activity)
         return;
     
-    // Load/create the appropriate section associated with intent
-    MCSectionViewController* sectionVC =  (MCSectionViewController*)  [self loadOrCreateViewController:[intent sectionName]];
+    // 2.
+    MCSectionViewController* sectionVC =  (MCSectionViewController*)  [self loadOrCreateViewController:[activity associatedSectionName]];
     NSAssert([sectionVC isKindOfClass:[MCSectionViewController class]], @"Your section %@ should subclass MCSectionViewController", [sectionVC description]);
     
-    
-    // Load/create appropriate View associated with intent
+    // 3.
     MCViewController* vc = nil;
-    if ([intent viewName])
+    if ([activity associatedViewName])
     {
-        vc = (MCViewController*) [self loadOrCreateViewController:[intent viewName]];
+        vc = (MCViewController*) [self loadOrCreateViewController:[activity associatedViewName]];
         
         // Add that it shouldn't a MCSectionViewController which subclasses MCViewController
         NSAssert([vc isKindOfClass:[MCViewController class]], @"Your view %@ should subclasses MCViewController", [vc description]);
         
         /* edge case: everything we are transitioning to is the same as the previous, need to create a new view */
         // Same section same view
-        if (sectionVC == currentSectionVC && vc == currentSectionVC.currentViewVC)
+        if (sectionVC == _currentSectionVC && vc == _currentSectionVC.currentViewVC)
         {
-            vc = (MCViewController*) [self forceLoadViewController:[intent viewName]];
+            vc = (MCViewController*) [self forceLoadViewController:[activity associatedViewName]];
         }
     }
+    // 3.1.
     else
     {
-        /* edge case: transitioning from itself to itself, need to create a new view */
-        if (sectionVC == currentSectionVC){
-            sectionVC = (MCSectionViewController*) [self forceLoadViewController:[intent sectionName]];
+        // If transitionning to same Section, we reload it anyway because the new Activity only has an associated Section
+        if (sectionVC == _currentSectionVC)
+        {
+            sectionVC = (MCSectionViewController*) [self forceLoadViewController:[activity associatedSectionName]];
         }
     }
     
-    /*
-     save changes to the previous intent
-     automatically propagates onPause to its child view
-     */
-    if (currentSectionVC){
-        /* reset debug flags */
-        currentSectionVC.debugTag = NO;
-        if (currentSectionVC.currentViewVC)
-            currentSectionVC.currentViewVC.debugTag = NO;
+    // 4.
+    if (_currentSectionVC)
+    {
+        // reset debug flags
+        _currentSectionVC.debugTag = NO;
+        if (_currentSectionVC.currentViewVC)
+            _currentSectionVC.currentViewVC.debugTag = NO;
         
-        [currentSectionVC onPause:activeIntent];
+        [_currentSectionVC onPause:_activeActivity];
         
 #ifdef DEBUG
-        if (!currentSectionVC.debugTag)
-            NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onPause:intent] called", currentSectionVC);
-        if (currentSectionVC.currentViewVC && !currentSectionVC.currentViewVC.debugTag)
-            NSLog(@"Subclass %@ of MCViewController did not have its [super onPause:intent] called", currentSectionVC.currentViewVC);
+        if (!_currentSectionVC.debugTag)
+            NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onPause:activity] called", _currentSectionVC);
+        if (_currentSectionVC.currentViewVC && !_currentSectionVC.currentViewVC.debugTag)
+            NSLog(@"Subclass %@ of MCViewController did not have its [super onPause:activity] called", _currentSectionVC.currentViewVC);
 #endif
     }
     
     // 3. switch the views
-    [self loadNewSection:sectionVC andView:vc withIntent:intent];
+    [self loadNewSection:sectionVC andView:vc withActivity:activity];
     
     // reset debug flags
-    currentSectionVC.debugTag = NO;
-    if (currentSectionVC.currentViewVC)
-        currentSectionVC.currentViewVC.debugTag = NO;
+    _currentSectionVC.debugTag = NO;
+    if (_currentSectionVC.currentViewVC)
+        _currentSectionVC.currentViewVC.debugTag = NO;
     
     // 4.resume on the section will also resume the view
-    activeIntent = intent;
-    [sectionVC onResume:intent];
+    _activeActivity = activity;
+    [sectionVC onResume:activity];
     
 #ifdef DEBUG
-    if (!currentSectionVC.debugTag)
-        NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onResume:intent] called", currentSectionVC);
-    if (currentSectionVC.currentViewVC && !currentSectionVC.currentViewVC.debugTag)
-        NSLog(@"Subclass %@ of MCViewController did not have its [super onResume:intent] called", currentSectionVC.currentViewVC);
+    if (!_currentSectionVC.debugTag)
+        NSLog(@"Subclass %@ of MCSectionViewController did not have its [super onResume:activity] called", _currentSectionVC);
+    if (_currentSectionVC.currentViewVC && !_currentSectionVC.currentViewVC.debugTag)
+        NSLog(@"Subclass %@ of MCViewController did not have its [super onResume:activity] called", _currentSectionVC.currentViewVC);
 #endif
 }
 
 -(void)overlaySlideshow:(NSArray*)overlays
 {
-    screenOverlaySlideshow = overlays;
+    _screenOverlaySlideshow = overlays;
     
     if (!overlays || overlays.count == 0)
     {
-        if (screenOverlayButton)
+        if (_screenOverlayButton)
         {
             // fade out the overlay in 200 ms
-            screenOverlayButton.alpha = 1.0;
+            _screenOverlayButton.alpha = 1.0;
             [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
-                screenOverlayButton.alpha = 0.0;
+                _screenOverlayButton.alpha = 0.0;
             } completion:^(BOOL finished) {
-                [screenOverlayButton resignFirstResponder];
-                [screenOverlayButton removeFromSuperview];
-                screenOverlayButton = nil;
+                [_screenOverlayButton resignFirstResponder];
+                [_screenOverlayButton removeFromSuperview];
+                _screenOverlayButton = nil;
             }];
         }
         return;
     }
     
     // load the overlay
-    if (!screenOverlayButton)
+    if (!_screenOverlayButton)
     {
         // set up the geometry of the new screen overlay
         CGRect rect = [self.view bounds];
-        screenOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        screenOverlayButton.frame = rect;
-        screenOverlayButton.contentMode = UIViewContentModeScaleToFill;
+        _screenOverlayButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        _screenOverlayButton.frame = rect;
+        _screenOverlayButton.contentMode = UIViewContentModeScaleToFill;
     }
     
     // this code will load 2 images on iPhone 5, one for the small screen and another image for the large screen
@@ -278,20 +293,20 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     // show the new overlay
     if (imgOverlay)
     {
-        [screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
-        screenOverlayButton.adjustsImageWhenHighlighted = NO;
+        [_screenOverlayButton setImage:imgOverlay forState:UIControlStateNormal];
+        _screenOverlayButton.adjustsImageWhenHighlighted = NO;
         
-        [screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
-        if (![self.view.subviews containsObject:screenOverlayButton])
+        [_screenOverlayButton addTarget:self action:@selector(overlayButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
+        if (![self.view.subviews containsObject:_screenOverlayButton])
         {
-            screenOverlayButton.alpha = 0.0;
-            [self.view addSubview:screenOverlayButton ];
+            _screenOverlayButton.alpha = 0.0;
+            [self.view addSubview:_screenOverlayButton ];
             [UIView animateWithDuration:MANTICORE_OVERLAY_ANIMATION_DURATION animations:^{
-                screenOverlayButton.alpha = 1.0;
+                _screenOverlayButton.alpha = 1.0;
             }];
         }
-        [self.view bringSubviewToFront:screenOverlayButton];
-        [screenOverlayButton becomeFirstResponder];
+        [self.view bringSubviewToFront:_screenOverlayButton];
+        [_screenOverlayButton becomeFirstResponder];
     }else{
 #ifdef DEBUG
         NSAssert(false, @"Screen overlay not found: %@", [MCViewManager sharedManager].screenOverlay);
@@ -306,32 +321,32 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 
 //---------------------------------------------------------------------------
-// Keys for private members : SectionName, ViewName and AnimationStyle in savedInstanceState Dictionary
+// Keys for private members : SectionName, ViewName and AnimationStyle in activityInfos Dictionary
 #define kSectionName    @"__SectionName__"
 #define kViewName       @"__ViewName__"
 #define kAnimationStlye @"__AnimationStyle__"
-// If intent is dynamic, its savedInstanceState will contain a dictionary for key kSearchInfos
+// If activity is dynamic, its activityInfos will contain a dictionary for key kSearchInfos
 #define kSearchInfos    @"__SearchInfos__"
 #define kType           @"__Type__"
 
 
 /**
- * This method loads the intent if dynamic request,
+ * This method loads the activity if dynamic request,
  * it also maintains the history stack.
  * @discussion For dynamic requests :
- * @discussion 1. Get savedInfos from intent
- * @discussion 2. Get a pointer to the intent we are looking for
- * @discussion 3. Populate the found intent with savedInfos
- * @discussion For Static intents : putIntentOnTopOfHistoryStack
+ * @discussion 1. Get savedInfos from activity
+ * @discussion 2. Get a pointer to the activity we are looking for
+ * @discussion 3. Populate the found activity with savedInfos
+ * @discussion For Static activities : putActivityOnTopOfHistoryStack
  *
  */
--(MCIntent*)loadIntentAndHandleHistoryStack:(MCIntent*)intent
+-(MCActivity*)loadActivityAndHandleHistoryStack:(MCActivity*)activity
 {
-    // We first look if the intent is dynamic (-> need to find corresponding intent in history stack)
-    if ([intent.savedInstanceState objectForKey:kSearchInfos])
+    // We first look if the activity is dynamic (-> need to find corresponding activity in history stack)
+    if ([activity.activityInfos objectForKey:kSearchInfos])
     {
-        // We will work on the dictionary to find the right method to apply to intent
-        NSDictionary *searchInfos = [intent.savedInstanceState objectForKey:kSearchInfos];
+        // We will work on the dictionary to find the right method to apply to activity
+        NSDictionary *searchInfos = [activity.activityInfos objectForKey:kSearchInfos];
         
         // We either want to make a pop or a push
         // Case push
@@ -347,37 +362,37 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         else NSLog(@"Key for searchInfos is %@ : BUG in %s", [searchInfos objectForKey:kType], __func__);
     }
     
-    // Intent is static, we can handle the intent as is
+    // Activity is static, we can handle the Activity as is
     else
     {
         // build the history stack
-        //[self putIntentOnTopOfHistoryStack:intent];
+        //[self putActivityOnTopOfHistoryStack:activity];
     }
     
-    //return intent;
+    //return activity;
     
     
     
     /* Handles SECTION_LAST (->1) &  SECTION_REWIND (->2) */
     /*----------------------------------------------------*/
-    if ([[intent sectionName] isEqualToString:SECTION_LAST] || [[intent sectionName] isEqualToString:SECTION_REWIND])
+    if ([[activity associatedSectionName] isEqualToString:SECTION_LAST] || [[activity associatedSectionName] isEqualToString:SECTION_REWIND])
     {
-        // Here we want to keep the savedInstanceState, without the SECTION or VIEW
-        NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
+        // Here we want to keep the activityInfos, without the SECTION or VIEW
+        NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[activity activityInfos]];
         [savedState removeObjectForKey:kViewName];
         [savedState removeObjectForKey:kSectionName];
         
-        // when  copying state values from the given intent, e.g., animation transition, to the old bundle
+        // when  copying state values from the given activity, e.g., animation transition, to the old bundle
         int popNum = 1;
         
         //we can possibly add x2 x3 etc to this as well
-        if ([[intent sectionName] isEqualToString:SECTION_REWIND]) {
+        if ([[activity associatedSectionName] isEqualToString:SECTION_REWIND]) {
             popNum = 2;
         }
         // try to get previous instance
-        MCIntent* previousIntent = [self popHistoryStack: popNum];
+        MCActivity* previousActivity = [self popHistoryStack: popNum];
 #ifdef DEBUG
-        if (previousIntent == nil){
+        if (previousActivity == nil){
             if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED){
                 NSLog(@"Cannot pop an empty stack because the stack size is set to STACK_SIZE_DISABLED. You should assign [MCViewManager sharedManager].stackSize on startup.");
             } else if ([MCViewManager sharedManager].stackSize == STACK_SIZE_UNLIMITED){
@@ -390,61 +405,61 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         }
 #endif
         
-        NSAssert(previousIntent != nil, @"Cannot pop an empty history stack.");
-        if (previousIntent == nil)
+        NSAssert(previousActivity != nil, @"Cannot pop an empty history stack.");
+        if (previousActivity == nil)
             return nil;
         
-        // replace the intent on the history stack
-        [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
-        return previousIntent;
+        // replace the Activity on the history stack
+        [[previousActivity activityInfos] setValuesForKeysWithDictionary:savedState];
+        return previousActivity;
     }
     
     /*          Handles SECTION_HISTORICAL (->1+)         */
     /*----------------------------------------------------*/
-    else if([[intent sectionName] isEqualToString:SECTION_HISTORICAL])
+    else if([[activity associatedSectionName] isEqualToString:SECTION_HISTORICAL])
     {
         
-        //we need to load the intent that is in this position in our history stack
-        NSNumber *historyNum = [intent.savedInstanceState objectForKey: @"historyNumber"];
+        //we need to load the activity that is in this position in our history stack
+        NSNumber *historyNum = [activity.activityInfos objectForKey: @"historyNumber"];
         
-        MCIntent* previousIntent = [self getHistoricalIntentAtIndex: [historyNum intValue]];
+        MCActivity* previousActivity = [self getHistoricalActivityAtIndex: [historyNum intValue]];
         
-        if (previousIntent == nil){
-            // default behaviour is to stop changing intents, the current intent is set to an improper state
+        if (previousActivity == nil){
+            // default behaviour is to stop changing Activities, the current Activity is set to an improper state
             return nil;
         }
         
         //removing the view name makes it so that the observer method doesnt try to create a new one
         
-        NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[intent savedInstanceState]];
+        NSMutableDictionary* savedState = [NSMutableDictionary dictionaryWithDictionary:[activity activityInfos]];
         [savedState removeObjectForKey:kSectionName];
         [savedState removeObjectForKey:kViewName];
         
-        [[previousIntent savedInstanceState] setValuesForKeysWithDictionary:savedState];
+        [[previousActivity activityInfos] setValuesForKeysWithDictionary:savedState];
         
-        [self putIntentOnTopOfHistoryStack:previousIntent];
+        [self putActivityOnTopOfHistoryStack:previousActivity];
         
         //this process will grab the historical view, put it on top of the stack and remove it from its old location
         //the potential situation could happen where we want to jump back and remove everything since then
         //in that case we should create another similar workflow using a seperate SECTION constant called REVERT or something
         //maybe this workflow could change to REUSE
         
-        return previousIntent;
+        return previousActivity;
         
     } else
     {
         // build the history stack
-        [self putIntentOnTopOfHistoryStack:intent];
+        [self putActivityOnTopOfHistoryStack:activity];
     }
     
-    return intent;
+    return activity;
 }
 
 
 // ---------------------------------------------------------------------------------------
-// Puts the intent on top of the history stack, making sure to keep the stack size bounded
+// Puts the Activity on top of the history stack, making sure to keep the stack size bounded
 //
--(void)putIntentOnTopOfHistoryStack:(MCIntent*)intent
+-(void)putActivityOnTopOfHistoryStack:(MCActivity*)activity
 {
     if ([MCViewManager sharedManager].stackSize == STACK_SIZE_DISABLED)
     {
@@ -462,26 +477,26 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     }
     
     // add the new object on the stack
-    [[[MCViewManager sharedManager] historyStack] addObject:intent];
+    [[[MCViewManager sharedManager] historyStack] addObject:activity];
 }
 
 
 #pragma mark Push helpers
 
 /**
- * We know which intent we want to push.
+ * We know which Activity we want to push.
  * We have to find it in the stack, remove it, add it on top
  *
  */
--(MCIntent *)pushIntentFromHistory:(MCIntent *)intent
+-(MCActivity *)pushActivityFromHistory:(MCActivity *)activity
 {
     NSAssert([MCViewManager sharedManager].historyStack.count > 0, @"%s : something should be on the stack", __func__);
     BOOL found = false;
     
-    // Try to find matching intent in historyStack
+    // Try to find matching Activity in historyStack
     for (int i=0; i<[MCViewManager sharedManager].historyStack.count; i++)
     {
-        if (intent == [[MCViewManager sharedManager].historyStack objectAtIndex:i])
+        if (activity == [[MCViewManager sharedManager].historyStack objectAtIndex:i])
         {
             [[MCViewManager sharedManager].historyStack removeObjectAtIndex:i];
             found = true;
@@ -489,22 +504,22 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         }
     }
     
-    NSAssert(found, @"You tried to pushToIntentInHistory but provided Intent couldn't be found : %@", [intent description]);
+    NSAssert(found, @"You tried to pushActivityFromHistory but provided Activity couldn't be found : %@", [activity description]);
     
     // We can put it on top
-    [[MCViewManager sharedManager].historyStack addObject:intent];
+    [[MCViewManager sharedManager].historyStack addObject:activity];
     
-    return intent;
+    return activity;
 }
 
 
 /**
- * We know where is the Intent (by it's position in the stack)
+ * We know where is the Activity (by it's position in the stack)
  * We have to find it in the stack, remove it, add it on top.
- * @discussion number = 1 means last intent
+ * @discussion number = 1 means last Activity
  *
  */
--(MCIntent *)pushIntentFromHistoryByNumber:(int)numberInHistory
+-(MCActivity *)pushActivityFromHistoryByNumber:(int)numberInHistory
 {
 #warning make sure NSAssert is good
     NSAssert([MCViewManager sharedManager].historyStack.count > numberInHistory, @"%s : something should be on the stack", __func__);
@@ -512,20 +527,20 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     // We first have to transform numberInHistory to position in stack -> (array count - numberInHistory - 1)
     int indexInStack = [MCViewManager sharedManager].historyStack.count - numberInHistory - 1;
     
-    // Get the intent, then delete it then put it on top
-    MCIntent *foundIntent = [[MCViewManager sharedManager].historyStack objectAtIndex:indexInStack];
+    // Get the Activity, then delete it then put it on top
+    MCActivity *foundActivity = [[MCViewManager sharedManager].historyStack objectAtIndex:indexInStack];
     [[MCViewManager sharedManager].historyStack removeObjectAtIndex:indexInStack];
-    [[MCViewManager sharedManager].historyStack addObject:foundIntent];
+    [[MCViewManager sharedManager].historyStack addObject:foundActivity];
     
-    return foundIntent;
+    return foundActivity;
 }
 
 /**
- * We know the name of the ViewController, let's find the corresponding intent
+ * We know the name of the ViewController, let's find the corresponding Activity
  * We have to find it in the stack, remove it, add it on top.
  *
  */
--(MCIntent *)pushIntentFromHistoryByName:(NSString *)viewName
+-(MCActivity *)pushActivityFromHistoryByName:(NSString *)viewName
 {
     
 }
@@ -536,35 +551,35 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 // ---------------------------------------------------------------------------------------
 // Goes back in historyStack "popNum" times.
-// Starting from 1, meaning back to previous intent.
+// Starting from 1, meaning back to previous Activity.
 //
--(MCIntent*)popHistoryStack: (int) popNum
+-(MCActivity*)popHistoryStack: (int) popNum
 {
     NSAssert([MCViewManager sharedManager].historyStack.count > 0, @"something should be on the stack");
     
-    MCIntent* retIntent = nil;
+    MCActivity* retActivity = nil;
     for (int i =0; i <= popNum; i++)
     {
         if ([MCViewManager sharedManager].historyStack.count > 0 && i != popNum)
         {
             [[MCViewManager sharedManager].historyStack removeLastObject]; // this is the shown view, we don't want to stay on this view so discard it
-            retIntent = [[MCViewManager sharedManager].historyStack lastObject];
+            retActivity = [[MCViewManager sharedManager].historyStack lastObject];
         }
         else
         {
-            return retIntent;
+            return retActivity;
         }
     }
     return nil; // nothing on the history stack
 }
 
--(MCIntent*)getHistoricalIntentAtIndex: (int) historyNum
+-(MCActivity*)getHistoricalActivityAtIndex: (int) historyNum
 {
     NSAssert([MCViewManager sharedManager].historyStack.count > historyNum, @"something should be on the stack");
     
-    MCIntent* retIntent = nil;
+    MCActivity* retActivity = nil;
     
-    retIntent = [[MCViewManager sharedManager].historyStack objectAtIndex: historyNum];
+    retActivity = [[MCViewManager sharedManager].historyStack objectAtIndex: historyNum];
     
     [[MCViewManager sharedManager].historyStack removeObjectAtIndex:historyNum];
     
@@ -574,7 +589,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     //
     //  [[MCViewManager sharedManager].historyStack  removeObjectsInRange: r];
     
-    return retIntent;
+    return retActivity;
 }
 
 
@@ -584,13 +599,13 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 -(MCViewController*) loadOrCreateViewController:(NSString*)sectionOrViewName
 {
     // create global view cache if it doesn't already exist
-    if (!dictCacheView)
+    if (!_dictCacheView)
     {
-        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+        _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
     }
     
     // test for existence
-    MCViewController* vc = [dictCacheView objectForKey:sectionOrViewName];
+    MCViewController* vc = [_dictCacheView objectForKey:sectionOrViewName];
     if (vc == nil)
     {
         // create the view controller
@@ -598,7 +613,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         NSAssert(vc != nil, @"VC should exist");
         
         [vc onCreate];
-        [dictCacheView setObject:vc forKey:sectionOrViewName];
+        [_dictCacheView setObject:vc forKey:sectionOrViewName];
     }
     
     return vc;
@@ -608,8 +623,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 -(MCViewController*) forceLoadViewController:(NSString*)sectionOrViewName
 {
     // create global view cache if it doesn't already exist
-    if (!dictCacheView){
-        dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
+    if (!_dictCacheView){
+        _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
     }
     
     // create the view controller
@@ -618,7 +633,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     [vc onCreate];
     
     //
-    [dictCacheView setObject:vc forKey:sectionOrViewName];
+    [_dictCacheView setObject:vc forKey:sectionOrViewName];
     return vc;
 }
 
@@ -629,11 +644,11 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 // View may be the same, or may not
 //
 //
--(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withIntent:(MCIntent*)intent
+-(void)loadNewSection:(MCSectionViewController*)sectionVC andView:(MCViewController*)viewVC withActivity:(MCActivity*)activity
 {
     
     // We get the wanted transition
-    int transitionStyle = [intent animationStyle];
+    int transitionStyle = [activity transitionAnimationStyle];
     
     //NSLog(@" Section : %i", transitionStyle);
     
@@ -655,7 +670,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     //
     
     // 1.
-    if (currentSectionVC != sectionVC ){
+    if (_currentSectionVC != sectionVC ){
         // 1.1
         [self addChildViewController:sectionVC];
         
@@ -669,13 +684,13 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         // 1.3
         if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT)
         {
-            [self.view insertSubview:sectionVC.view belowSubview:currentSectionVC.view];
+            [self.view insertSubview:sectionVC.view belowSubview:_currentSectionVC.view];
         } else {
             [self.view addSubview:sectionVC.view];
         }
         
         // 1.4
-        MCSectionViewController* oldSectionVC = currentSectionVC;
+        MCSectionViewController* oldSectionVC = _currentSectionVC;
         [oldSectionVC.currentViewVC resignFirstResponder];
         [oldSectionVC resignFirstResponder];
         
@@ -683,7 +698,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         BOOL transitionApplied = [MCMainViewController applyTransitionFromView:oldSectionVC.view toView:sectionVC.view transition:transitionStyle completion:^{
             
             // 1.5.1
-            if (oldSectionVC != currentSectionVC)
+            if (oldSectionVC != _currentSectionVC)
             {
                 // 1.5.2
                 [oldSectionVC.view removeFromSuperview];
@@ -698,7 +713,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
             [UIView transitionFromView:oldSectionVC.view toView:sectionVC.view duration:0.25 options:(transitionStyle | UIViewAnimationOptionShowHideTransitionViews) completion:^(BOOL finished) {
                 
                 // 1.6.1.
-                if (oldSectionVC != currentSectionVC)
+                if (oldSectionVC != _currentSectionVC)
                 {
                     [oldSectionVC.view removeFromSuperview];
                     [oldSectionVC removeFromParentViewController];
@@ -792,8 +807,8 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     }
   
     // We applied the transitions so we can now set the new (or not) section and new (or not) view.
-    currentSectionVC = sectionVC;
-    currentSectionVC.currentViewVC = viewVC;
+    _currentSectionVC = sectionVC;
+    _currentSectionVC.currentViewVC = viewVC;
 }
 
 
@@ -801,12 +816,12 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 - (void)overlayButtonPressed:(id)sender
 {
-    NSMutableArray* newArray = [NSMutableArray arrayWithArray:screenOverlaySlideshow];
+    NSMutableArray* newArray = [NSMutableArray arrayWithArray:_screenOverlaySlideshow];
     if (newArray.count > 0)
     {
         [newArray removeObjectAtIndex:0];
     }
-    screenOverlaySlideshow = newArray;
+    _screenOverlaySlideshow = newArray;
     [self overlaySlideshow:newArray];
 }
 

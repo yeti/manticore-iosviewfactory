@@ -13,15 +13,15 @@
 #import "MCErrorViewController.h"
 #import "MCConstants.h"
 
-@interface MCMainViewController : MCViewController {
-    
-  NSMutableDictionary *dictCacheView;
-  MCErrorViewController* errorVC;
-  MCSectionViewController* currentSectionVC;
-  MCIntent* activeIntent;
-  UIButton* screenOverlayButton;
-  NSArray* screenOverlaySlideshow;
-}
+@interface MCMainViewController : MCViewController
 
+// Do we really need to make these readable ?
+
+@property (strong, nonatomic, readonly) NSMutableDictionary *dictCacheView;
+@property (strong, nonatomic, readonly) MCErrorViewController* errorVC;
+@property (strong, nonatomic, readonly) MCSectionViewController* currentSectionVC;
+@property (strong, nonatomic, readonly) MCActivity* activeActivity;
+@property (strong, nonatomic, readonly) UIButton* screenOverlayButton;
+@property (strong, nonatomic, readonly) NSArray* screenOverlaySlideshow;
 
 @end
