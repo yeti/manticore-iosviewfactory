@@ -60,24 +60,24 @@
 #pragma mark Section without view
 
 
-+(MCActivity *) newActivityWithRelatedSectionName: (NSString*)sectionName
++(MCActivity *) newActivityWithAssociatedSectionNamed: (NSString*)sectionName
 {
-    MCActivity* newActivity = [[MCActivity alloc] initWithRelatedSectionName:sectionName];
+    MCActivity* newActivity = [[MCActivity alloc] initWithAssociatedSectionNamed:sectionName];
     return newActivity;
 }
 
-+(MCActivity *) newActivityWithRelatedSectionName: (NSString*)sectionName
-                           andAnimation:(UIViewAnimationOptions)animation
++(MCActivity *) newActivityWithAssociatedSectionNamed: (NSString*)sectionName
+                                         andAnimation:(UIViewAnimationOptions)animation
 {
-    MCActivity* newActivity = [[MCActivity alloc] initWithRelatedSectionName:sectionName];
+    MCActivity* newActivity = [[MCActivity alloc] initWithAssociatedSectionNamed:sectionName];
     [newActivity setTransitionAnimationStyle:animation];
     return newActivity;
 }
 
-+(MCActivity *) newActivityWithRelatedSectionName:(NSString*)sectionName
-                       andActivityInfos:(NSMutableDictionary*)activityInfos
++(MCActivity *) newActivityWithAssociatedSectionNamed:(NSString*)sectionName
+                                     andActivityInfos:(NSMutableDictionary*)activityInfos
 {
-    MCActivity* newActivity = [[MCActivity alloc] initWithRelatedSectionName:sectionName
+    MCActivity* newActivity = [[MCActivity alloc] initWithAssociatedSectionNamed:sectionName
                                                           andActivityInfos:activityInfos];
     return newActivity;
 }
@@ -85,19 +85,19 @@
 
 #pragma mark Section with view
 
-+(MCActivity *) newActivityWithRelatedViewName:(NSString*)viewName
-                      inSectionNamed:(NSString*)sectionName
++(MCActivity *) newActivityWithAssociatedViewNamed:(NSString*)viewName
+                                    inSectionNamed:(NSString*)sectionName
 {
-    MCActivity* newActivity = [[MCActivity alloc] initWithRelatedViewName:viewName
+    MCActivity* newActivity = [[MCActivity alloc] initWithAssociatedViewNamed:viewName
                                                          inSectionNamed:sectionName];
     return newActivity;
 }
 
-+(MCActivity *) newActivityWithRelatedViewName:(NSString*)viewName
-                      inSectionNamed:(NSString*)sectionName
-                        andAnimation:(UIViewAnimationOptions)animation
++(MCActivity *) newActivityWithAssociatedViewNamed:(NSString*)viewName
+                                    inSectionNamed:(NSString*)sectionName
+                                      andAnimation:(UIViewAnimationOptions)animation
 {
-    MCActivity* newActivity = [[MCActivity alloc] initWithRelatedViewName:viewName
+    MCActivity* newActivity = [[MCActivity alloc] initWithAssociatedViewNamed:viewName
                                                          inSectionNamed:sectionName];
     [newActivity setTransitionAnimationStyle:animation];
     return newActivity;
@@ -107,17 +107,17 @@
 
 +(id) intentPreviousIntent
 {
-    return [MCActivity newActivityWithRelatedSectionName:SECTION_LAST];
+    return [MCActivity newActivityWithAssociatedSectionNamed:SECTION_LAST];
 }
 
 +(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation
 {
-    return [MCActivity newActivityWithRelatedSectionName:SECTION_LAST andAnimation:animation];
+    return [MCActivity newActivityWithAssociatedSectionNamed:SECTION_LAST andAnimation:animation];
 }
 
 +(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum
 {
-    MCActivity *intent = [MCActivity newActivityWithRelatedSectionName: SECTION_HISTORICAL];
+    MCActivity *intent = [MCActivity newActivityWithAssociatedSectionNamed: SECTION_HISTORICAL];
     [intent.activityInfos setObject: historyNum forKey: @"historyNumber"];
     return intent;
 }
@@ -269,9 +269,10 @@
 
 #pragma mark - Private initialization methods
 
--(id) initWithRelatedSectionName: (NSString*)sectionName
+-(id) initWithAssociatedSectionNamed: (NSString*)sectionName
 {
-    NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
+    // Comment off when finished updating methods
+    //NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
     
     if (self = [super init])
     {
@@ -281,8 +282,8 @@
     return self;
 }
 
--(id) initWithRelatedViewName: (NSString*)viewName
-               inSectionNamed:(NSString*)sectionName
+-(id) initWithAssociatedViewNamed: (NSString*)viewName
+                   inSectionNamed:(NSString*)sectionName
 {
     NSAssert(NSClassFromString(viewName), @"%s : View %@ could not be found", __func__, viewName);
     NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
@@ -297,8 +298,8 @@
     return self;
 }
 
--(id) initWithRelatedSectionName: (NSString*)sectionName
-                andActivityInfos:(NSMutableDictionary*)activityInfos
+-(id) initWithAssociatedSectionNamed: (NSString*)sectionName
+                    andActivityInfos:(NSMutableDictionary*)activityInfos
 {
     NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
     

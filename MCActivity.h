@@ -116,9 +116,9 @@
 #pragma mark - New Activity creation methods
 
 
-/*            **---------------------------------------------------**
- *            **  Schema for "newActivityWithRelatedSectionName:"  **
- *            **---------------------------------------------------**
+/*            **-------------------------------------------------------**
+ *            **  Schema for "newActivityWithAssociatedSectionNamed:"  **
+ *            **-------------------------------------------------------**
  *
  *
  * Method used in example : "newActivityWithRelatedSectionName:Section3VC"
@@ -132,45 +132,45 @@
  */
 
 /*!
- * @function newActivityWithRelatedSectionName
+ * @function newActivityWithAssociatedSectionNamed
  * @discussion Sections without Views should be avoided.
  * @discussion Creates and return a new Activity. This Activity will not be related to any View, only a Section. Behavior has not been tested. 
  * @discussion Instead, we recommand creating a dummy MCSectionViewController sub-class and then create Activities related to this Section for your Views that can not be grouped in Sections.
  * @param sectionName       The Section the Activity will be related to
  */
-+(id) newActivityWithRelatedSectionName: (NSString*) name;
++(MCActivity *) newActivityWithAssociatedSectionNamed: (NSString*) sectionName;
 
 /*!
- * @function newActivityWithRelatedSectionName andActivityInfos
+ * @function newActivityWithAssociatedSectionNamed andActivityInfos
  * @discussion Only used by the undo operation.
  * @discussion Creates and return a new Activity. This Activity will not be related to any View, only a Section. Behavior has not been tested.
  * @discussion Instead, we recommand creating a dummy MCSectionViewController sub-class and then create Activities related to this Section for your Views that can not be grouped in Sections.
  * @param sectionName       The Section the Activity will be related to
  * @param andSavedInstance  The Activity's savedInstance dictionary
  */
-+(id) newActivityWithRelatedSectionName:(NSString*) name
-                       andActivityInfos:(NSMutableDictionary*) activityInfos;
++(MCActivity *) newActivityWithAssociatedSectionNamed: (NSString*) sectionName
+                                     andActivityInfos: (NSMutableDictionary*) activityInfos;
 
 /*!
- * @function newActivityWithRelatedSectionName andAnimation
+ * @function newActivityWithAssociatedSectionNamed andAnimation
  * @discussion Creates and return a new Activity. This Activity will not be related to any View, only a Section. Behavior has not been tested.
  * @discussion Instead, we recommand creating a dummy MCSectionViewController sub-class and then create Activities related to this Section for your Views that can not be grouped in Sections.
  * @param sectionName   The Section the Activity will be related to
  * @param animation     The animation to this Activity's Section when processed.
  * @discussion Prefered animations are ANIMATION_NOTHING, ANIMATION_PUSH, ANIMATION_POP, UIViewAnimationOptionTransitionCrossDissolve. Other UI transitions work.
  */
-+(id) newActivityWithRelatedSectionName: (NSString*) name
-                           andAnimation:(UIViewAnimationOptions) animation;
++(MCActivity *) newActivityWithAssociatedSectionNamed: (NSString*) name
+                                         andAnimation: (UIViewAnimationOptions) animation;
 
 
 
 
-/*            **----------------------------------------------------------------**
- *            **  Schema for "newActivityWithSectionName: andRelatedViewName:"  **
- *            **----------------------------------------------------------------**
+/*            **--------------------------------------------------------------------**
+ *            **  Schema for "newActivityWithAssociatedViewNamed: inSectionNamed:"  **
+ *            **--------------------------------------------------------------------**
  *
  *
- * Input in example : "newActivityWithSectionName:Section3VC andRelatedViewName:View35VC"
+ * Input in example : "newActivityWithAssociatedViewNamed:Section3VC andRelatedViewName:View35VC"
  *
  * +--------+---------++---+---+---+---+---+---+---+---+---+---+-+-+     +---+
  * |        |SectionVC|| 1 | 1 | 1 | 2 | 2 | 1 | 1 | 3 | 3 | 3 | 3 |     | 3 |
@@ -181,25 +181,25 @@
  */
 
 /*!
- * @function newActivityWithRelatedViewName inSectionNamed
+ * @function newActivityWithAssociatedViewNamed inSectionNamed
  * @discussion Creates and return a new Activity attributed to a Section and related to a View.
  * @param sectionName   The Section the Activity will be related with
  * @param viewName      The View the Activity will be related to
  */
-+(MCActivity *) newActivityWithRelatedViewName: (NSString*) viewName
-                                inSectionNamed: (NSString*) sectionName;
++(MCActivity *) newActivityWithAssociatedViewNamed: (NSString*) viewName
+                                    inSectionNamed: (NSString*) sectionName;
 
 /*!
- * @function newActivityWithRelatedViewName: inSectionNamed: andAnimation:
+ * @function newActivityWithAssociatedViewNamed: inSectionNamed: andAnimation:
  * @discussion Creates and return a new Activity attributed to a Section and related to a View and with an animation.
  * @param sectionName   The Section the Activity will be related with
  * @param viewName      The View the Activity will be related to
  * @param animation     The animation to this Activity's View when processed. 
  * @discussion Prefered animations are ANIMATION_NOTHING, ANIMATION_PUSH, ANIMATION_POP, UIViewAnimationOptionTransitionCrossDissolve. Other UI transitions work.
  */
-+(MCActivity *) newActivityWithRelatedViewName: (NSString*)viewName
-                                inSectionNamed:(NSString*)sectionName
-                                  andAnimation:(UIViewAnimationOptions)animation;
++(MCActivity *) newActivityWithAssociatedViewNamed: (NSString*)viewName
+                                    inSectionNamed: (NSString*)sectionName
+                                      andAnimation: (UIViewAnimationOptions)animation;
 
 
 #pragma mark - Navigation Activities

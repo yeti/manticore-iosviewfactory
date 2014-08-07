@@ -542,7 +542,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
  */
 -(MCActivity *)pushActivityFromHistoryByName:(NSString *)viewName
 {
-    
+    return nil;
 }
 
 
