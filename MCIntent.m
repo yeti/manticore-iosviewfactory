@@ -1,0 +1,338 @@
+/*
+ MCActivity.m
+ Manticore iOSViewFactory
+ 
+ Created by Richard Fung on 9/19/12.
+ Reworked, refactored and commented by Philippe Bertin on August 1, 2014
+ 
+ Copyright (c) 2014 Yeti LLC. All rights reserved.
+
+ */
+
+#import "MCIntent.h"
+
+
+@interface MCIntent ()
+
+@property (strong, nonatomic, readwrite) NSString *sectionName;
+@property (strong, nonatomic, readwrite) NSString *viewName;
+@property (strong, nonatomic, readwrite) MCStackRequestDescriptor *descriptor;
+
+@property (strong, nonatomic, readwrite) NSMutableDictionary   *activityInfos;
+
+@end
+
+
+
+@implementation MCIntent
+
+@synthesize transitionAnimationStyle;
+
+#pragma mark - Class methods
+
+
+#pragma mark Section without view
+
+
++(MCIntent *) newActivityWithAssociatedSectionNamed: (NSString*)sectionName
+{
+    MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedSectionNamed:sectionName];
+    return newActivity;
+}
+
++(MCIntent *) newActivityWithAssociatedSectionNamed: (NSString*)sectionName
+                                         andAnimation:(UIViewAnimationOptions)animation
+{
+    MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedSectionNamed:sectionName];
+    [newActivity setTransitionAnimationStyle:animation];
+    return newActivity;
+}
+
++(MCIntent *) newActivityWithAssociatedSectionNamed:(NSString*)sectionName
+                                     andActivityInfos:(NSMutableDictionary*)activityInfos
+{
+    MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedSectionNamed:sectionName
+                                                          andActivityInfos:activityInfos];
+    return newActivity;
+}
+
+
+#pragma mark Section with view
+
++(MCIntent *) newActivityWithAssociatedViewNamed:(NSString*)viewName
+                                    inSectionNamed:(NSString*)sectionName
+{
+    MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedViewNamed:viewName
+                                                         inSectionNamed:sectionName];
+    return newActivity;
+}
+
++(MCIntent *) newActivityWithAssociatedViewNamed:(NSString*)viewName
+                                    inSectionNamed:(NSString*)sectionName
+                                      andAnimation:(UIViewAnimationOptions)animation
+{
+    MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedViewNamed:viewName
+                                                         inSectionNamed:sectionName];
+    [newActivity setTransitionAnimationStyle:animation];
+    return newActivity;
+}
+
+#pragma mark To be removed
+
++(id) intentPreviousIntent
+{
+    return [MCIntent newActivityWithAssociatedSectionNamed:SECTION_LAST];
+}
+
++(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation
+{
+    return [MCIntent newActivityWithAssociatedSectionNamed:SECTION_LAST andAnimation:animation];
+}
+
++(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum
+{
+    MCIntent *intent = [MCIntent newActivityWithAssociatedSectionNamed: SECTION_HISTORICAL];
+    [intent.activityInfos setObject: historyNum forKey: @"historyNumber"];
+    return intent;
+}
+
+
+#pragma mark Dynamic Push Activities
+
++(MCIntent *) pushActivityFromHistory: (MCIntent *) ptrToActivity
+{
+    NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
+    
+    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:ptrToActivity];
+    return newActivity;
+}
+
+
++(MCIntent *)pushActivityFromHistoryByPosition:(int)positionInStack
+{
+    NSAssert((positionInStack > 0), @"%s : positionInStack can not be %i", __func__, positionInStack);
+    
+    NSNumber *numberPosition = [NSNumber numberWithInt:positionInStack];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)pushActivityFromHistoryByName:(NSString *)mcViewControllerName
+{
+    NSAssert(NSClassFromString(mcViewControllerName), @"%s : %@ does not exist.", __func__, mcViewControllerName);
+    
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:mcViewControllerName];
+    return newActivity;
+}
+
+
+#pragma mark Dynamic Pop Activities in history
+
++(MCIntent *)popToActivityInHistory:(MCIntent *)ptrToActivity
+{
+    NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
+    
+    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:ptrToActivity];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityInHistoryByPosition:(int)positionInStack
+{
+    NSAssert((positionInStack > 0), @"%s : positionInStack can not be %i", __func__, positionInStack);
+    
+    NSNumber *numberPosition = [NSNumber numberWithInt:positionInStack];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+
+}
+
++(MCIntent *)popToActivityInHistoryByPositionLast
+{
+    NSNumber *numberPosition = [NSNumber numberWithInt:1];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityInHistoryByName:(NSString *)mcViewControllerName
+{
+    NSAssert(NSClassFromString(mcViewControllerName), @"%s : %@ does not exist.", __func__, mcViewControllerName);
+    
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"history"
+                                                                 userInfo:mcViewControllerName];
+    return newActivity;
+}
+
+
+#pragma mark Dynamic Pop Activities to Section root
+
+// popToActivityRoot is special as the number can not be known.
+// Therefore, it is assigned number : -1.
+//
++(MCIntent *)popToActivityRoot
+{
+    NSNumber *numberPosition = [NSNumber numberWithInt:1];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"root"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityRootInSectionCurrent
+{
+    NSNumber *numberPosition = [NSNumber numberWithInt:0];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"root"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityRootInSectionLast
+{
+    NSNumber *numberPosition = [NSNumber numberWithInt:1];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"root"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityRootInSectionNamed:(NSString *)mcSectionViewControllerName
+{
+    NSAssert(NSClassFromString(mcSectionViewControllerName), @"%s : %@ does not exist.", __func__, mcSectionViewControllerName);
+    
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"root"
+                                                                 userInfo:mcSectionViewControllerName];
+    return newActivity;
+}
+
+
+#pragma mark Dynamic Pop Activities to Section last
+
++(MCIntent *)popToActivityLastInSectionLast
+{
+    NSNumber *numberPosition = [NSNumber numberWithInt:0];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                           requestCriteria:@"last"
+                                                                 userInfo:numberPosition];
+    return newActivity;
+}
+
++(MCIntent *)popToActivityLastInSectionNamed:(NSString *)mcSectionViewControllerName
+{
+    NSAssert(NSClassFromString(mcSectionViewControllerName), @"%s : %@ does not exist.", __func__, mcSectionViewControllerName);
+    
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
+                                                       requestCriteria:@"last"
+                                                             userInfo:mcSectionViewControllerName];
+    return newActivity;
+}
+
+
+#pragma mark - Private initialization methods
+
+-(id) initWithAssociatedSectionNamed: (NSString*)sectionName
+{
+    // Comment off when finished updating methods
+    //NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
+    
+    if (self = [super init])
+    {
+        self.transitionAnimationStyle = UIViewAnimationTransitionNone;
+        self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
+        self.sectionName = sectionName;
+    }
+    return self;
+}
+
+-(id) initWithAssociatedViewNamed: (NSString*)viewName
+                   inSectionNamed: (NSString*)sectionName
+{
+    NSAssert(NSClassFromString(viewName), @"%s : View %@ could not be found", __func__, viewName);
+    NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
+    
+    if (self = [super init])
+    {
+        self.transitionAnimationStyle = UIViewAnimationTransitionNone;
+        self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
+        self.viewName = viewName;
+        self.sectionName = sectionName;
+        
+    }
+    return self;
+}
+
+-(id) initWithAssociatedSectionNamed: (NSString*)sectionName
+                    andActivityInfos: (NSMutableDictionary*)activityInfos
+{
+    NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
+    
+    if (self = [super init])
+    {
+        self.transitionAnimationStyle = UIViewAnimationTransitionNone;
+        self.activityInfos = [NSMutableDictionary dictionaryWithDictionary:activityInfos];
+        self.sectionName = sectionName;
+    }
+    
+    return self;
+}
+
+/*!
+ * Initialize an intent requesting an activity : an intent that contains all the information for finding an Activity in the history stack.
+ *
+ * @param activityType      Either "pop" or "push". These are the two supported types by Manticore. When found, the Activity will either be pushed or popped on top of the stack.
+ * @param searchCriteria    Can be "history", "root" or "last". History means looking at the stack as a whole. Root means the activity looked for is the root activity of a Section. Last means looking for the last activity that appeared in a given section.
+ * @param userInfo          Currently supported userInfo types are : (MCActivity*), (NSString *), and ints represented by (NSNumber*).
+ *
+ */
+-(id) initIntentRequestType:(NSString *)requestType
+            requestCriteria:(NSString *)requestCriteria
+                   userInfo:(NSObject *)requestInfo
+{
+    if (self = [super init])
+    {
+        self.transitionAnimationStyle = UIViewAnimationTransitionNone;
+        self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
+        self.descriptor = [[MCStackRequestDescriptor alloc] initWithRequestType:requestType
+                                                            requestCriteria:requestCriteria
+                                                                requestInfo:requestInfo];
+    }
+    
+    return self;
+}
+
+#pragma mark - Getters & Setters
+
+-(NSString*) sectionName
+{
+    return _sectionName;
+}
+
+-(NSString*) viewName
+{
+    return _viewName;
+}
+
+-(NSMutableDictionary*) activityInfos
+{
+    return _activityInfos;
+}
+
+
+-(NSString *) description {
+    return [NSString stringWithFormat:@"MCActivity section=%@, view=%@, dictionary=%@", self.sectionName, self.viewName, self.activityInfos];
+}
+
+@end

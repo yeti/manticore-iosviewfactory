@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "MCConstants.h"
 #import "MCActivity.h"
+#import "MCIntent.h"
 
 
 
@@ -72,7 +73,7 @@
 // Will process the given Activity and place it as first responder
 // Setting of the currentActivity needs to be wrapped in case we ever need to make changes again
 //
-- (void)processActivity:(MCActivity *)newCurrentActivity;
+- (void)processIntent:(MCIntent *)intent;
 
 
 //--------------------------------------------------------------------------------
