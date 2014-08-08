@@ -11,17 +11,17 @@
 
 @interface MCStackRequestDescriptor ()
 
-@property (strong, nonatomic, readwrite) NSString *requestType;
-@property (strong, nonatomic, readwrite) NSString *requestCriteria;
+@property (nonatomic, readwrite) availableRequestType requestType;
+@property (nonatomic, readwrite) availableRequestCriteria requestCriteria;
 @property (strong, nonatomic, readwrite) NSObject *requestInfos;
 
 @end
 
 @implementation MCStackRequestDescriptor
 
--(id)initWithRequestType:(NSString *)requestType
-         requestCriteria:(NSString *)requestCriteria
-             requestInfo:(NSObject *)requestInfo
+-(id)initWithRequestType:(availableRequestType)requestType
+         requestCriteria:(availableRequestCriteria)requestCriteria
+             requestInfo:(NSObject*)requestInfo
 {
     if (self = [super init])
     {
@@ -37,10 +37,10 @@
 -(void)verifyEntries
 {
     // Test for pop/push
-    NSAssert(([_requestType isEqualToString:@"pop"]||[_requestType isEqualToString:@"push"]), @"%s : MCIntent can only create pop or push request. %@ is not supported yet.", __func__, _requestType);
+    NSAssert((_requestType == POP||_requestType == PUSH), @"%s : MCIntent can only create pop or push request. %u is not supported yet.", __func__, _requestType);
     
     //Test for history/root/last
-    NSAssert(([_requestCriteria isEqualToString:@"history"]||[_requestCriteria isEqualToString:@"root"]||[_requestCriteria isEqualToString:@"last"]), @"%s : MCIntent can only create history, root or last request criterias. %@ is not supported yet.", __func__, _requestCriteria);
+    NSAssert((_requestCriteria == HISTORY||_requestCriteria == ROOT||_requestCriteria == LAST), @"%s : MCIntent can only create history, root or last request criterias. %u is not supported yet.", __func__, _requestCriteria);
     
     //Test for UserInfo
     //TODO

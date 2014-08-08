@@ -557,24 +557,10 @@
 
 
 
-#pragma mark - Depreciated methods
-
-
-// intent for going to the last view, no animation
-+(id) intentPreviousIntent __deprecated;
-
-// intent for going to the last view, any animation
-+(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation __deprecated;
-
-// intent for going to a specific view in the history stack
-+(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum __deprecated;
-
-
-
 #pragma mark - internal accessors
 
 @property (strong, nonatomic, readonly) NSString *sectionName;
 @property (strong, nonatomic, readonly) NSString *viewName;
-@property (strong, nonatomic, readonly) MCStackRequestDescriptor *descriptor;
+@property (strong, nonatomic, readonly) MCStackRequestDescriptor *stackRequestDescriptor;
 
 @end

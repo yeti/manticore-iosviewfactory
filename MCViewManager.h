@@ -36,18 +36,21 @@
 
 // Name of the screen overlay : naming convention of UIImage. Do not include extension.
 // May be suffixed by _5 for iPhone 5 screen size overlay.
-@property(atomic, strong) NSString          *screenOverlay;
+@property(nonatomic, strong) NSString          *screenOverlay;
 
 // Array of strings for multiple overlays. Naming convention of UIImage. Do not include extension.
 // May be suffixed by _5 for iPhone 5 screen size overlay.
-@property(atomic, strong) NSArray           *screenOverlays;
+@property(nonatomic, strong) NSArray           *screenOverlays;
 
-// Saved Activities on the history stack. Do not change this variable directly.
-@property(atomic, strong) NSMutableArray    *historyStack;
 
 // Valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0.
 // Stack size includes the current view controller.
 @property(nonatomic) int stackSize;
+
+
+// IS IT REALLY NEEDED ?
+// Saved Activities on the history stack. Do not change this variable directly.
+@property(nonatomic, strong, readonly) NSMutableArray    *historyStack;
 
 
 
@@ -73,7 +76,7 @@
 // Will process the given Activity and place it as first responder
 // Setting of the currentActivity needs to be wrapped in case we ever need to make changes again
 //
-- (void)processIntent:(MCIntent *)intent;
+- (MCActivity *)processIntent:(MCIntent *)intent;
 
 
 //--------------------------------------------------------------------------------

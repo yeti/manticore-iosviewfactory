@@ -16,7 +16,7 @@
 
 @property (strong, nonatomic, readwrite) NSString *sectionName;
 @property (strong, nonatomic, readwrite) NSString *viewName;
-@property (strong, nonatomic, readwrite) MCStackRequestDescriptor *descriptor;
+@property (strong, nonatomic, readwrite) MCStackRequestDescriptor *stackRequestDescriptor;
 
 @property (strong, nonatomic, readwrite) NSMutableDictionary   *activityInfos;
 
@@ -63,37 +63,18 @@
                                     inSectionNamed:(NSString*)sectionName
 {
     MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedViewNamed:viewName
-                                                         inSectionNamed:sectionName];
+                                                           inSectionNamed:sectionName];
     return newActivity;
 }
 
 +(MCIntent *) newActivityWithAssociatedViewNamed:(NSString*)viewName
-                                    inSectionNamed:(NSString*)sectionName
-                                      andAnimation:(UIViewAnimationOptions)animation
+                                  inSectionNamed:(NSString*)sectionName
+                                    andAnimation:(UIViewAnimationOptions)animation
 {
     MCIntent* newActivity = [[MCIntent alloc] initWithAssociatedViewNamed:viewName
-                                                         inSectionNamed:sectionName];
+                                                           inSectionNamed:sectionName];
     [newActivity setTransitionAnimationStyle:animation];
     return newActivity;
-}
-
-#pragma mark To be removed
-
-+(id) intentPreviousIntent
-{
-    return [MCIntent newActivityWithAssociatedSectionNamed:SECTION_LAST];
-}
-
-+(id) intentPreviousIntentWithAnimation:(UIViewAnimationOptions)animation
-{
-    return [MCIntent newActivityWithAssociatedSectionNamed:SECTION_LAST andAnimation:animation];
-}
-
-+(id) intentToLoadHistoricalIntentNumber: (NSNumber *) historyNum
-{
-    MCIntent *intent = [MCIntent newActivityWithAssociatedSectionNamed: SECTION_HISTORICAL];
-    [intent.activityInfos setObject: historyNum forKey: @"historyNumber"];
-    return intent;
 }
 
 
@@ -103,9 +84,9 @@
 {
     NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
     
-    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:ptrToActivity];
+    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:PUSH
+                                                    requestCriteria:HISTORY
+                                                           userInfo:ptrToActivity];
     return newActivity;
 }
 
@@ -115,9 +96,9 @@
     NSAssert((positionInStack > 0), @"%s : positionInStack can not be %i", __func__, positionInStack);
     
     NSNumber *numberPosition = [NSNumber numberWithInt:positionInStack];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:PUSH
+                                                    requestCriteria:HISTORY
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
@@ -125,9 +106,9 @@
 {
     NSAssert(NSClassFromString(mcViewControllerName), @"%s : %@ does not exist.", __func__, mcViewControllerName);
     
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"push"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:mcViewControllerName];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:PUSH
+                                                    requestCriteria:HISTORY
+                                                           userInfo:mcViewControllerName];
     return newActivity;
 }
 
@@ -138,9 +119,9 @@
 {
     NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
     
-    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:ptrToActivity];
+    MCIntent* newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:HISTORY
+                                                           userInfo:ptrToActivity];
     return newActivity;
 }
 
@@ -149,9 +130,9 @@
     NSAssert((positionInStack > 0), @"%s : positionInStack can not be %i", __func__, positionInStack);
     
     NSNumber *numberPosition = [NSNumber numberWithInt:positionInStack];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:HISTORY
+                                                           userInfo:numberPosition];
     return newActivity;
 
 }
@@ -159,9 +140,9 @@
 +(MCIntent *)popToActivityInHistoryByPositionLast
 {
     NSNumber *numberPosition = [NSNumber numberWithInt:1];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:HISTORY
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
@@ -169,9 +150,9 @@
 {
     NSAssert(NSClassFromString(mcViewControllerName), @"%s : %@ does not exist.", __func__, mcViewControllerName);
     
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"history"
-                                                                 userInfo:mcViewControllerName];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:HISTORY
+                                                           userInfo:mcViewControllerName];
     return newActivity;
 }
 
@@ -184,27 +165,27 @@
 +(MCIntent *)popToActivityRoot
 {
     NSNumber *numberPosition = [NSNumber numberWithInt:1];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"root"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:ROOT
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
 +(MCIntent *)popToActivityRootInSectionCurrent
 {
     NSNumber *numberPosition = [NSNumber numberWithInt:0];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"root"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:ROOT
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
 +(MCIntent *)popToActivityRootInSectionLast
 {
     NSNumber *numberPosition = [NSNumber numberWithInt:1];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"root"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:ROOT
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
@@ -212,9 +193,9 @@
 {
     NSAssert(NSClassFromString(mcSectionViewControllerName), @"%s : %@ does not exist.", __func__, mcSectionViewControllerName);
     
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"root"
-                                                                 userInfo:mcSectionViewControllerName];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:ROOT
+                                                           userInfo:mcSectionViewControllerName];
     return newActivity;
 }
 
@@ -224,9 +205,9 @@
 +(MCIntent *)popToActivityLastInSectionLast
 {
     NSNumber *numberPosition = [NSNumber numberWithInt:0];
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                           requestCriteria:@"last"
-                                                                 userInfo:numberPosition];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                    requestCriteria:LAST
+                                                           userInfo:numberPosition];
     return newActivity;
 }
 
@@ -234,9 +215,9 @@
 {
     NSAssert(NSClassFromString(mcSectionViewControllerName), @"%s : %@ does not exist.", __func__, mcSectionViewControllerName);
     
-    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:@"pop"
-                                                       requestCriteria:@"last"
-                                                             userInfo:mcSectionViewControllerName];
+    MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
+                                                requestCriteria:LAST
+                                                           userInfo:mcSectionViewControllerName];
     return newActivity;
 }
 
@@ -245,14 +226,14 @@
 
 -(id) initWithAssociatedSectionNamed: (NSString*)sectionName
 {
-    // Comment off when finished updating methods
-    //NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
+    NSAssert(NSClassFromString(sectionName), @"%s : Section %@ could not be found", __func__, sectionName);
     
     if (self = [super init])
     {
         self.transitionAnimationStyle = UIViewAnimationTransitionNone;
         self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
         self.sectionName = sectionName;
+        self.stackRequestDescriptor = nil;
     }
     return self;
 }
@@ -269,6 +250,7 @@
         self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
         self.viewName = viewName;
         self.sectionName = sectionName;
+        self.stackRequestDescriptor = nil;
         
     }
     return self;
@@ -284,6 +266,7 @@
         self.transitionAnimationStyle = UIViewAnimationTransitionNone;
         self.activityInfos = [NSMutableDictionary dictionaryWithDictionary:activityInfos];
         self.sectionName = sectionName;
+        self.stackRequestDescriptor = nil;
     }
     
     return self;
@@ -297,42 +280,28 @@
  * @param userInfo          Currently supported userInfo types are : (MCActivity*), (NSString *), and ints represented by (NSNumber*).
  *
  */
--(id) initIntentRequestType:(NSString *)requestType
-            requestCriteria:(NSString *)requestCriteria
+-(id) initIntentRequestType:(availableRequestType)requestType
+            requestCriteria:(availableRequestCriteria)requestCriteria
                    userInfo:(NSObject *)requestInfo
 {
     if (self = [super init])
     {
         self.transitionAnimationStyle = UIViewAnimationTransitionNone;
         self.activityInfos = [NSMutableDictionary dictionaryWithCapacity:4];
-        self.descriptor = [[MCStackRequestDescriptor alloc] initWithRequestType:requestType
-                                                            requestCriteria:requestCriteria
-                                                                requestInfo:requestInfo];
+        self.stackRequestDescriptor = [[MCStackRequestDescriptor alloc] initWithRequestType:requestType
+                                                                            requestCriteria:requestCriteria
+                                                                                requestInfo:requestInfo];
     }
     
     return self;
 }
 
-#pragma mark - Getters & Setters
-
--(NSString*) sectionName
-{
-    return _sectionName;
-}
-
--(NSString*) viewName
-{
-    return _viewName;
-}
-
--(NSMutableDictionary*) activityInfos
-{
-    return _activityInfos;
-}
-
 
 -(NSString *) description {
-    return [NSString stringWithFormat:@"MCActivity section=%@, view=%@, dictionary=%@", self.sectionName, self.viewName, self.activityInfos];
+    if (!_viewName)
+        return [NSString stringWithFormat:@"MCIntent associated with section : %@ \n dictionary=%@", _sectionName, _activityInfos];
+    else
+        return [NSString stringWithFormat:@"MCIntent in section %@, associated with view %@ \n dictionary=%@", _sectionName, _viewName, _activityInfos];
 }
 
 @end

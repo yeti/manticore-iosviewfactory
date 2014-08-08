@@ -28,15 +28,68 @@
  *
  */
 
+/*!
+ *  All currently supported scenarios :
+ *
+ *  type            criteria                               info
+ *    |                 |                                    |
+ *  +---+       +----------------+                      +------+------+
+ *  |POP|-----> | From/In history+-----------------+-->  MCActivity * |
+ *  +---+   +-> +----------------+                 |    +------+------+
+ *          |                                      |
+ *          |   +----------------+                 |    +-------------+
+ *          +-> |Root in Section +------+----+-->  +-->  NSString *   |
+ *  +----+  |   +----------------+      |    |     |    +-------------+
+ *  |PUSH|--+                           |    |     |
+ *  +----+  |   +----------------+      |    |     |    +-----+
+ *          +-> |Last in Section +------+->  +-->  +-->  int  |
+ *              +----------------+                      +-----+
+ *
+ *
+ * Corresponding to the following methods :
+ *
+ *  pushActivityFromHistory:(intent)                
+ *  pushActivityFromHistoryByName:(NSString)
+ *  pushActivityFromHistoryByPosition:(int)
+ *
+ *  popToActivityInHistory:(intent)
+ *  popToActivityInHistoryByName:(NSString)
+ *  popToActivityInHistoryByPosition:(int)
+ *  popToActivityInHistoryByPositionLast
+ *
+ *  popToActivityRoot
+ *  popToActivityRootInSectionLast
+ *  popToActivityRootInSectionCurrent
+ *  popToActivityRootInSectionNamed:(NSString)
+ *
+ *  popToActivityLastInSectionLast
+ *  popToActivityLastInSectionNamed:(NSString)
+ *
+ *
+ */
 
 
-@property (strong, nonatomic, readonly) NSString *requestType;
-@property (strong, nonatomic, readonly) NSString *requestCriteria;
-@property (strong, nonatomic, readonly) NSObject *requestInfos;
+typedef enum {
+    POP,
+    PUSH
+}availableRequestType;
 
 
--(id)initWithRequestType:(NSString *)requestType
-         requestCriteria:(NSString*)requestCriteria
+
+typedef enum {
+    HISTORY,
+    ROOT,
+    LAST
+}availableRequestCriteria;
+
+
+@property (nonatomic, readonly) availableRequestType        requestType;
+@property (nonatomic, readonly) availableRequestCriteria    requestCriteria;
+@property (strong, nonatomic, readonly) NSObject*           requestInfos;
+
+
+-(id)initWithRequestType:(availableRequestType)requestType
+         requestCriteria:(availableRequestCriteria)requestCriteria
              requestInfo:(NSObject*)requestInfo;
 
 @end
