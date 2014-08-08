@@ -49,7 +49,9 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 
 /* 
- Register listeners to repsond to MCViewManager changes
+ *
+ * Register listeners to repsond to MCViewManager changes
+ *
  */
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -81,25 +83,31 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
     _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
-// Selector called when MCViewManager flushViewCache's method is called.
+/*
+ * Selector called when MCViewManager flushViewCache's method is called.
+ *
+ */
 -(void)flushViewCache:(NSNotification *)notification
 {
     _dictCacheView = [NSMutableDictionary dictionaryWithCapacity:10];
 }
 
-// ----------------------------------------------------------------------------
-// Modified value changes are observed from MCViewManager :
-//      - currentActivity
-//      - errorDict
-//      - screenOverlay
-//      - screenOverlays
-//
+
+/*!
+ * Observed values from MCViewManager :
+ *
+ * - currentActivity
+ * - errorDict
+ * - screenOverlay
+ * - screenOverlays
+ *
+ */
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if ([keyPath isEqualToString:@"currentActivity"])
     {
         manticore_runOnMainQueueWithoutDeadlocking(^{
-            [self goToActivity:[object valueForKeyPath:keyPath]];
+            [self updateUIWithNewActivity:[object valueForKeyPath:keyPath]];
         });
     
     } else if ([keyPath isEqualToString:@"errorDict"])
@@ -152,22 +160,25 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
 
 # pragma mark - Callback methods
 
-// -------------------------------------------------------------------------------
-// Callback method for transitioning to a new Activity
-// 2. Load/create the appropriate section associated with the activity
-// 3. Load/create appropriate View associated with the activity
-// 3.1. Activity is only associated with a Section
-// 4. Propagation of onPause to the active Activity's childView before transitionning (-> for saving changes to previous activity)
-//
-//
-- (void) goToActivity: (MCActivity*) activity {
+
+/*!
+ * New Activity happened in MCViewController. UI Needs to be updated in consequence.
+ *
+ * 1. Load or Create the appropriate section associated with the activity
+ *
+ * 2. Load or Create the appropriate View associated with the activity (if relevant)
+ *
+ * 3. Propagation of onPause to the active Activity's childView before transitionning (-> for saving changes to previous activity)
+ *
+ */
+- (void) updateUIWithNewActivity: (MCActivity*) activity {
     
     
-    // 2.
+    // 1.
     MCSectionViewController* sectionVC =  (MCSectionViewController*)  [self loadOrCreateViewController:[activity associatedSectionName]];
     NSAssert([sectionVC isKindOfClass:[MCSectionViewController class]], @"Your section %@ should subclass MCSectionViewController", [sectionVC description]);
     
-    // 3.
+    // 2.
     MCViewController* vc = nil;
     if ([activity associatedViewName])
     {
@@ -183,7 +194,6 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
             vc = (MCViewController*) [self forceLoadViewController:[activity associatedViewName]];
         }
     }
-    // 3.1.
     else
     {
         // If transitionning to same Section, we reload it anyway because the new Activity only has an associated Section
