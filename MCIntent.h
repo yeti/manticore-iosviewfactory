@@ -32,6 +32,7 @@
 #import <Foundation/Foundation.h>
 #import "MCConstants.h"
 #import "MCStackRequestDescriptor.h"
+#import "MCActivity.h"
 
 
 
@@ -240,7 +241,7 @@
  * @param ptrActivity Pointer to the Activity to push on top of the stack.
  * @return New pointer to the Activity, make sur to replace old one with this one.
  */
-+(MCIntent *) pushActivityFromHistory: (MCIntent *) ptrToActivity;
++(MCIntent *) pushActivityFromHistory: (MCActivity *) ptrToActivity;
 
 /*!
  * @function pushActivityFromHistoryByPosition
@@ -302,7 +303,7 @@
  * @param ptrActivity Pointer to the Activity to pop to.
  * @return New pointer to the Activity, make sur to replace old one with this one.
  */
-+(MCIntent *) popToActivityInHistory: (MCIntent *) ptrToActivity;
++(MCIntent *) popToActivityInHistory: (MCActivity *) ptrToActivity;
 
 /*!
  * @function popToActivityInHistoryByPosition

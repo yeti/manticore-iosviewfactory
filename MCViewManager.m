@@ -40,6 +40,7 @@
  */
 @property(nonatomic, strong, readwrite) NSMutableArray *historyStack;
 
+
 @end
 
 
@@ -101,7 +102,9 @@
 /*!
  *
  * 1. We have to either find the activity of create it (and deal with historyStack)
+ *
  * 2. Populate the activity with new activityInfos from intent
+ *
  * 3. Set the activity as new current Activity
  *
  */
@@ -109,9 +112,11 @@
 {
     // 1.
     MCActivity *activity = [self loadOrCreateActivityWithIntent:intent];
+    if (!activity)
+        return nil;
     
     // 2.
-    [activity.activityInfos setValuesForKeysWithDictionary:[intent activityInfos]];
+    [activity.activityInfos addEntriesFromDictionary:[intent activityInfos]];
     activity.transitionAnimationStyle = intent.transitionAnimationStyle;
     
     // 3.
@@ -162,6 +167,12 @@
 }
 
 
+-(int)historyStackCount
+{
+    return _historyStack.count;
+}
+
+
 #pragma mark - Load and create Activities
 
 /*!
@@ -175,28 +186,37 @@
  */
 -(MCActivity *)loadOrCreateActivityWithIntent:(MCIntent *)intent
 {
+    if (!intent)
+        return nil;
+    
     MCActivity *activity = nil;
     
-    if (intent.stackRequestDescriptor == nil && intent.sectionName)
+    if (!intent.stackRequestDescriptor && intent.sectionName)
     {
         activity = [self createActivityWithIntent:intent];
         [self addActivityOnTopOfStack:activity];
     }
     
-    if (intent.stackRequestDescriptor != nil)
+    else if (intent.stackRequestDescriptor && !intent.sectionName && !intent.viewName)
     {
-        NSAssert((_stackSize != 1), @"Stack size can not but disabled (=1) when trying to pop or push");
+        NSAssert((_stackSize != 1), @"Stack size can not be disabled (=1) when trying to pop or push");
         NSAssert((_historyStack.count > 1), @"Stack needs at least 2 Activies in stack (including current) when trying to pop or push");
         
         // See if push of pop method wanted and call appropriate method.
-        if (intent.stackRequestDescriptor.requestType == POP)
+        switch (intent.stackRequestDescriptor.requestType)
         {
-            activity = [self findAndPopToActivityOnStack:intent];
+            case POP:
+                activity = [self findAndPopToActivityOnStackWithIntent:intent];
+                break;
+                
+            case PUSH:
+                activity = [self findAndPushActivityOnTopOfStackWithIntent:intent];
+                break;
+                
+            default:
+                break;
         }
-        if (intent.stackRequestDescriptor.requestType == PUSH)
-        {
-            activity = [self findAndPushActivityOnTopOfStack:intent];
-        }
+        
     }
     
     return activity;
@@ -233,36 +253,42 @@
  * @return The found activity or nil if not found. It will create an assertion anyway.
  *
  */
--(MCActivity *)findAndPushActivityOnTopOfStack:(MCIntent *)intent
+-(MCActivity *)findAndPushActivityOnTopOfStackWithIntent:(MCIntent *)intent
 {
     // RequestInfo
     NSObject *info = intent.stackRequestDescriptor.requestInfos;
     
-    // Position in stack = -1 : not found.
+    // Init with position in stack = -1 : not found.
     NSInteger foundPositionInStack = -1;
     
-    // As of this version, only pushing with criteria "history" is available
-    NSAssert(intent.stackRequestDescriptor.requestCriteria == HISTORY, @"%s : MCError, put a ticket on GitHub. Can not find an Activity to push with criteria other than HISTORY", __func__);
     
-    if (info == nil)
+    switch (intent.stackRequestDescriptor.requestCriteria)
     {
-        NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity to push without requestInfo", __func__);
+        case HISTORY:
+            if (info == nil)
+            {
+                NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity to push without requestInfo", __func__);
+            }
+            else if ([info isKindOfClass:[NSNumber class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistoryByPosition:(NSNumber*)info];
+            }
+            else if ([info isKindOfClass:[NSString class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistoryByName:(NSString*)info];
+            }
+            else if ([info isKindOfClass:[MCActivity class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistory:(MCActivity*)info];
+            }
+            break;
+            
+        default:
+            // As of this version, pushing is available with criteria "history" only.
+            NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity to push with criteria other than HISTORY yet", __func__);
+            break;
     }
-    else
-        if ([info isKindOfClass:[NSNumber class]])
-        {
-            foundPositionInStack = [self positionOfActivityInHistoryByPosition:(NSNumber*)info];
-        }
-    else
-        if ([info isKindOfClass:[NSString class]])
-        {
-            foundPositionInStack = [self positionOfActivityInHistoryByName:(NSString*)info];
-        }
-    else
-        if ([info isKindOfClass:[MCActivity class]])
-        {
-            foundPositionInStack = [self positionOfActivityInHistory:(MCActivity*)info];
-        }
+    
     
     NSAssert(foundPositionInStack != 0, @"%s : Can not push current intent", __func__, intent);
     NSAssert(foundPositionInStack > 0, @"%s : Could not find activity corresponding to intent : %@", __func__, intent);
@@ -272,7 +298,7 @@
     [_historyStack removeObjectAtIndex:foundPositionInStack];
     
     // Push on top of stack
-    [_historyStack addObject:_historyStack];
+    [_historyStack addObject:activity];
     
     return activity;
 }
@@ -285,15 +311,99 @@
  * @return The found activity or nil if not found. It will create an assertion anyway.
  *
  */
--(MCActivity *)findAndPopToActivityOnStack:(MCIntent *)intent
+-(MCActivity *)findAndPopToActivityOnStackWithIntent:(MCIntent *)intent
 {
-    return nil;
+    // RequestInfo
+    NSObject *info = intent.stackRequestDescriptor.requestInfos;
+    
+    // Position in stack = -1 : not found.
+    NSInteger foundPositionInStack = -1;
+    
+    switch (intent.stackRequestDescriptor.requestCriteria)
+    {
+        case HISTORY:
+            if (info == nil)
+            {
+                NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity without requestInfo", __func__);
+            }
+            else if ([info isKindOfClass:[NSNumber class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistoryByPosition:(NSNumber*)info];
+            }
+            else if ([info isKindOfClass:[NSString class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistoryByName:(NSString*)info];
+            }
+            else if ([info isKindOfClass:[MCActivity class]])
+            {
+                foundPositionInStack = [self positionOfActivityInHistory:(MCActivity*)info];
+            }
+            break;
+            
+        case ROOT:
+            if (info == nil)
+            {
+                NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity without requestInfo", __func__);
+            }
+            else if ([info isKindOfClass:[NSNumber class]])
+            {
+                foundPositionInStack = [self positionOfActivityRootInSection:(NSNumber*)info];
+            }
+            else if ([info isKindOfClass:[NSString class]])
+            {
+                foundPositionInStack = [self positionOfActivityRootInSectionNamed:(NSString*)info];
+            }
+            break;
+
+            
+        case LAST:
+            if (info == nil)
+            {
+                NSAssert(false, @"%s : MCError, put a ticket on GitHub. Can not find an Activity without requestInfo", __func__);
+            }
+            else if ([info isKindOfClass:[NSNumber class]])
+            {
+                foundPositionInStack = [self positionOfActivityLastInSection:(NSNumber*)info];
+            }
+            else if ([info isKindOfClass:[NSString class]])
+            {
+                foundPositionInStack = [self positionOfActivityLastInSectionNamed:(NSString*)info];
+            }
+            break;
+
+        
+        default:
+            NSAssert(false, @"%s : MCError, put a ticket on GitHub.", __func__);
+            break;
+    }
+    
+    // Make sure position is between [0;_historyStack.count-2]
+    if (foundPositionInStack == _historyStack.count-1)
+    {
+        NSLog(@"%s : Can not push current intent", __func__);
+        return nil;
+    }
+    else if (foundPositionInStack < 0)
+    {
+        NSLog(@"%s : Could not find activity corresponding to intent : %@", __func__, [intent description]);
+        return nil;
+    }
+    
+    // Find activity
+    MCActivity *activity = [_historyStack objectAtIndex:foundPositionInStack];
+
+    // Remove all activities until foundPosition
+    while (_historyStack.count > (foundPositionInStack+1)) {
+        [_historyStack removeLastObject];
+    }
+    
+    return activity;
 }
 
 #pragma mark Dealing with history stack when creating Activity
 
 /*!
- * This method checks the stackSize and deal with adding/removing Activities from the stack if necessary.
+ * This method adds the acivity on top of the stack and then checks the stackSize and deal with adding/removing Activities from the stack if necessary.
  *
  * STACK_SIZE_DISABLED = 1 ; STACK_SIZE_UNLIMITED = 0 .
  *
@@ -345,7 +455,7 @@
 }
 
 /*!
- * Given poisition (positionFromLast) symmetrically at opposite position from center of historyStack.
+ * Given position (positionFromLast) symmetrically at opposite position from center of historyStack.
  */
 -(NSInteger)positionOfActivityInHistoryByPosition:(NSNumber *)positionFromLast
 {
@@ -355,13 +465,13 @@
 
 /*!
  * Check every viewName (then sectionName is no viewName) for given viewName.
- * Returns position of first occurence found
+ * @return Position of first occurence found
  */
 -(NSInteger)positionOfActivityInHistoryByName:(NSString *)viewName
 {
     for (NSInteger i=_historyStack.count-1; i>=0; i--)
     {
-        MCActivity *activity = (MCActivity *)[_historyStack objectAtIndex:i];
+        MCActivity *activity = [_historyStack objectAtIndex:i];
         if (activity.associatedViewName)
         {
             if ([activity.associatedViewName isEqualToString:viewName])
@@ -380,7 +490,140 @@
 #pragma mark Root in Section
 
 
+/*!
+ * Given the sectionPosition (currentSection=0, lastSection=1..), this method will find the root intent in this section.
+ */
+-(NSInteger)positionOfActivityRootInSection:(NSNumber *)sectionPosition
+{
+    // Special case : -1 means we want the root activity on stack (position 0 in stack)
+    if ([sectionPosition intValue] == -1)
+        return 0;
+    
+    NSInteger foundPosition = 0;
+    NSInteger sectionCounter = [sectionPosition integerValue];
+    NSInteger numberOfSectionChanges = 0;
+    
+    NSString *currentSectionName = ((MCActivity *)[_historyStack lastObject]).associatedSectionName;
+    
+    for (NSInteger i = _historyStack.count -1; i>=0; i--)
+    {
+        MCActivity *activity = [_historyStack objectAtIndex:i];
+        
+        // Check if changed section
+        if (![activity.associatedSectionName isEqualToString:currentSectionName])
+        {
+            sectionCounter--;
+            numberOfSectionChanges ++;
+            currentSectionName = activity.associatedSectionName;
+            
+            if (sectionCounter < 0)
+            {
+                return i+1;
+            }
+        }
+    }
+    
+    // We make sure we didn't find any root but the one is the good section
+    if (numberOfSectionChanges >= [sectionPosition intValue])
+    {
+        return foundPosition;
+    }
+    else return -1;
+}
+
+/*!
+ *
+ * Finds the root Activity in the given Section (first occurence of section observed)
+ *
+ */
+-(NSInteger)positionOfActivityRootInSectionNamed:(NSString *)sectionName
+{
+    NSInteger foundPosition = -1;
+    bool foundSection = false;
+    
+    for (NSInteger i=_historyStack.count-1; i>=0; i--)
+    {
+        MCActivity *activity = [_historyStack objectAtIndex:i];
+        
+        // When section is found
+        if ([activity.associatedSectionName isEqualToString:sectionName])
+        {
+            foundPosition = i;
+            foundSection = true;
+        }
+        // When section changes after found
+        else if (foundSection)
+        {
+            return foundPosition;
+        }
+    }
+    
+    return foundPosition;
+}
+
+
+
 #pragma mark Last in Section
 
+/*!
+ *
+ * Given the sectionPosition (lastSection=1..), this method will find the last intent in this section. Due to the nature of the "Last", this method can not find lastInCurrentSection. (Instead use : positionOfActivityInHistory(1)).
+ *
+ */
+-(NSInteger)positionOfActivityLastInSection:(NSNumber *)sectionPosition
+{
+    NSAssert([sectionPosition intValue] >=0, @"%s : Put a ticket on Github, sectionPosition cannot be @u", __func__, [sectionPosition intValue]);
+    
+    NSInteger numberOfSectionChanges = 0;
+    NSString *currentSectionName = ((MCActivity *)[_historyStack lastObject]).associatedSectionName;
+    
+    for (NSInteger i = _historyStack.count -1; i>=0; i--)
+    {
+        MCActivity *activity = [_historyStack objectAtIndex:i];
+        
+        if (![activity.associatedSectionName isEqualToString:currentSectionName])
+        {
+            numberOfSectionChanges++;
+            currentSectionName = activity.associatedSectionName;
+            
+            // Test if we reached the good section
+            if (numberOfSectionChanges == [sectionPosition intValue])
+            {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+
+
+/*!
+ *
+ * Finds the last Activity in the given Section (first occurence of section observed)
+ *
+ */
+-(NSInteger)positionOfActivityLastInSectionNamed:(NSString *)sectionName
+{
+    // Make sure sectionName is different from current Section
+    if ([((MCActivity*)[_historyStack objectAtIndex:_historyStack.count-1]).associatedSectionName isEqualToString:sectionName])
+    {
+        NSLog(@"%s : Due to the nature of this method, it is not possible to use ActivityLastInSectionNamed(nameOfTheCurrentSection). It is required that the Section to go to (\"sectionName\") is different from the current Section.", __func__);
+        return -1;
+    }
+    
+    for (NSInteger i=_historyStack.count-1; i>=0; i--)
+    {
+        MCActivity *activity = [_historyStack objectAtIndex:i];
+        
+        // When section is found
+        if ([activity.associatedSectionName isEqualToString:sectionName])
+        {
+            return i;
+        }
+    }
+    return -1;
+}
 
 @end

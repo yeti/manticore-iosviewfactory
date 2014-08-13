@@ -203,7 +203,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
         }
     }
     
-    // 4.
+    // 3.
     if (_currentSectionVC)
     {
         // reset debug flags

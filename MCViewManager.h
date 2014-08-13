@@ -34,23 +34,36 @@
 @interface MCViewManager : NSObject
 
 
-// Name of the screen overlay : naming convention of UIImage. Do not include extension.
-// May be suffixed by _5 for iPhone 5 screen size overlay.
+/*!
+ * Name of the screen overlay : naming convention of UIImage. Do not include extension.
+ * May be suffixed by _5 for iPhone 5 screen size overlay.
+ *
+ */
 @property(nonatomic, strong) NSString          *screenOverlay;
 
-// Array of strings for multiple overlays. Naming convention of UIImage. Do not include extension.
-// May be suffixed by _5 for iPhone 5 screen size overlay.
+
+/*!
+ * Array of strings for multiple overlays. Naming convention of UIImage. Do not include extension.
+ * May be suffixed by _5 for iPhone 5 screen size overlay.
+ *
+ */
 @property(nonatomic, strong) NSArray           *screenOverlays;
 
 
-// Valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0.
-// Stack size includes the current view controller.
+/*!
+ * Valid settings are STACK_SIZE_DISABLED, STACK_SIZE_UNLIMITED, and > 0.
+ * Stack size includes the current view controller.
+ *
+ */
 @property(nonatomic) int stackSize;
 
 
-// IS IT REALLY NEEDED ?
-// Saved Activities on the history stack. Do not change this variable directly.
-@property(nonatomic, strong, readonly) NSMutableArray    *historyStack;
+/*!
+ * Getter for the history stack count of elements.
+ * @discussion Count=1 means only the current Activity is in the stack and therefore navigationIntents should't be processed.
+ *
+ */
+@property(nonatomic, readonly) int historyStackCount;
 
 
 
@@ -72,30 +85,47 @@
 -(UIViewController*)createViewController:(NSString*)sectionOrViewName;
 
 
-//--------------------------------------------------------------------------------
-// Will process the given Activity and place it as first responder
-// Setting of the currentActivity needs to be wrapped in case we ever need to make changes again
-//
+
+/*!
+ *
+ * To become an activity, an Intent has to be processed through this method. Two types of intents :
+ *
+ * 1. Intent to create an activity : the newly created activity will be returned then processed to appear on screen.
+ *
+ * 2. Intent to pop or push an activity from the History Stack (also called "navigation intent") : MCViewManager will try to find the activity described in the intent and pop/push it on top of the stack and returns it to you.
+ *
+ * Because of the Manticore MVC pattern, will be returned the pointer to the "about to become active" activity BEFORE it actually becomes active. This should not matter because Activities shall never be manipulated directly (-> no risk to manipulate it before it shows up on screen). You should only keep the returned pointer if you intend to use it for stack navigation (you will give this pointer as a parameter when creating a navigation intent).
+ *
+ *
+ * @param intent The intent that will be processed to become an Activity
+ * @return The Activity corresponding to your processed intent. The MCIntent provided methods for navigating between activities should most of time be enough for your needs. However you can still keep a pointer to the activity if needed.
+ *
+ */
 - (MCActivity *)processIntent:(MCIntent *)intent;
 
 
-//--------------------------------------------------------------------------------
-// Clear the history of Activities
-//
+/*!
+ * Called to clear all activities from the history stack.
+ *
+ * This method does not clear the View cache. See "clearViewCache".
+ */
 - (void)clearHistoryStack;
 
 
-//--------------------------------------------------------------------------------
-// Clear the cached UIViewControllers created by MCMainViewController
-//
+/*!
+ * Clear the cached UIViewControllers created by MCMainViewController
+ *
+ * This method does not clear the history stack of activities. See "clearHistoryStack".
+ */
 - (void)clearViewCache;
 
 
-//--------------------------------------------------------------------------------
-// Using this function will shows an error message
-//      above the main window given the title and description.
-// It will not affect the history stack.
-//
+
+/*!
+ * Using this function will shows an error message above the main window given the title and description.
+ *
+ * It will not affect the history stack.
+ */
 - (void)setErrorTitle:(NSString*) title andDescription:(NSString*) description;
 
 

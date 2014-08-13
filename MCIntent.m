@@ -80,7 +80,7 @@
 
 #pragma mark Dynamic Push Activities
 
-+(MCIntent *) pushActivityFromHistory: (MCIntent *) ptrToActivity
++(MCIntent *) pushActivityFromHistory: (MCActivity *) ptrToActivity
 {
     NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
     
@@ -115,7 +115,7 @@
 
 #pragma mark Dynamic Pop Activities in history
 
-+(MCIntent *)popToActivityInHistory:(MCIntent *)ptrToActivity
++(MCIntent *)popToActivityInHistory:(MCActivity *)ptrToActivity
 {
     NSAssert(ptrToActivity != nil, @"%s : given pointer to activity is nil", __func__);
     
@@ -157,14 +157,14 @@
 }
 
 
-#pragma mark Dynamic Pop Activities to Section root
+#pragma mark Dynamic Pop Activities to root in Section
 
 // popToActivityRoot is special as the number can not be known.
 // Therefore, it is assigned number : -1.
 //
 +(MCIntent *)popToActivityRoot
 {
-    NSNumber *numberPosition = [NSNumber numberWithInt:1];
+    NSNumber *numberPosition = [NSNumber numberWithInt:-1];
     MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
                                                     requestCriteria:ROOT
                                                            userInfo:numberPosition];
@@ -200,11 +200,12 @@
 }
 
 
-#pragma mark Dynamic Pop Activities to Section last
+#pragma mark Dynamic Pop Activities to last in Section
 
 +(MCIntent *)popToActivityLastInSectionLast
 {
-    NSNumber *numberPosition = [NSNumber numberWithInt:0];
+    // Section last is 1 (current = 0)
+    NSNumber *numberPosition = [NSNumber numberWithInt:1];
     MCIntent *newActivity = [[MCIntent alloc] initIntentRequestType:POP
                                                     requestCriteria:LAST
                                                            userInfo:numberPosition];
@@ -298,10 +299,12 @@
 
 
 -(NSString *) description {
-    if (!_viewName)
+    if (!_viewName && _sectionName)
         return [NSString stringWithFormat:@"MCIntent associated with section : %@ \n dictionary=%@", _sectionName, _activityInfos];
-    else
+    else if (_viewName && _sectionName)
         return [NSString stringWithFormat:@"MCIntent in section %@, associated with view %@ \n dictionary=%@", _sectionName, _viewName, _activityInfos];
+
+    return [NSString stringWithFormat:@"MCIntent with stack request type %u - criteria %u - info %@", _stackRequestDescriptor.requestType, _stackRequestDescriptor.requestCriteria, [_stackRequestDescriptor.requestInfos description]];
 }
 
 @end
