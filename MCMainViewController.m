@@ -466,7 +466,7 @@ void manticore_runOnMainQueueWithoutDeadlocking(void (^block)(void))
             [viewVC.view setFrame:rect];
             NSLog(@"%i", transitionStyle);
             
-            if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT) {
+            if (transitionStyle == ANIMATION_POP || transitionStyle == ANIMATION_POP_LEFT || transitionStyle == kAnimationPopToBottom) {
                 
                 [sectionVC.innerView insertSubview:viewVC.view belowSubview:oldViewVC.view];
             } else {

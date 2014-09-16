@@ -104,6 +104,7 @@ static MCViewFactory* _sharedFactory = nil;
     // not the best place for this code but it'll work for now
     
     CGPoint finalPosition = oldView.center;
+  
     CGPoint leftPosition = CGPointMake(-oldView.frame.size.width + finalPosition.x, finalPosition.y);
     CGPoint rightPosition = CGPointMake(finalPosition.x + oldView.frame.size.width, finalPosition.y);
     
@@ -113,12 +114,13 @@ static MCViewFactory* _sharedFactory = nil;
     
     CGPoint topPosition = CGPointMake(finalPosition.x, finalPosition.y + oldView.frame.size.height);
     CGPoint bottomPosition = CGPointMake(finalPosition.x, -oldView.frame.size.height + finalPosition.y);
+  
+    CGPoint closerTopPosition = CGPointMake(finalPosition.x, finalPosition.y - 40);
+    CGPoint closerBottomPosition = CGPointMake(finalPosition.x, finalPosition.y + 40);
 
     if (value == ANIMATION_PUSH){
         newView.center = rightPosition;
         oldView.center = finalPosition;
-        
-
 
         [UIView animateWithDuration:0.5 animations:^{
             newView.center = finalPosition;
@@ -173,11 +175,13 @@ static MCViewFactory* _sharedFactory = nil;
         return YES;
         
     } else if (value == ANIMATION_SLIDE_FROM_BOTTOM) {
-        
-        newView.center = topPosition;
+      
+      oldView.center = finalPosition;
+      newView.center = topPosition;
         
         [UIView animateWithDuration:0.5 animations:^{
             newView.center = finalPosition;
+          oldView.center = closerTopPosition;
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
@@ -186,14 +190,36 @@ static MCViewFactory* _sharedFactory = nil;
         
     } else if (value == ANIMATION_SLIDE_FROM_TOP) {
         newView.center = bottomPosition;
-        
+      oldView.center = finalPosition;
+
         [UIView animateWithDuration:0.5 animations:^{
             newView.center = finalPosition;
+          oldView.center = closerBottomPosition;
+
         } completion:^(BOOL finished) {
             completion();
             oldView.center = finalPosition;
         }];
         return YES;
+      
+    } else if (value == kAnimationPopToBottom) {
+      
+      newView.center = closerTopPosition;
+      oldView.center = finalPosition;
+
+      [UIView animateWithDuration:0.5 animations:^{
+        oldView.center = topPosition;
+        newView.center = finalPosition;
+      } completion:^(BOOL finished) {
+        completion();
+        oldView.center = finalPosition;
+      }];
+      
+      return YES;
+    } else if (value == kAnimationPopToTop) {
+
+      
+      return YES;
     } else {
         return NO;
     }

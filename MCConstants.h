@@ -30,6 +30,10 @@
 #define ANIMATION_SLIDE_FROM_BOTTOM   1 << 12
 #define ANIMATION_SLIDE_FROM_TOP      1 << 13
 
+static const int kAnimationPopToTop = 44;
+static const int kAnimationPopToBottom = 45;
+
+
 // iOS 5 support
 #define MANTICORE_IOS5_SCREEN_SIZE 568
 #define MANTICORE_IOS5_OVERLAY_SUFFIX @"_5"

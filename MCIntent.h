@@ -37,7 +37,6 @@
   NSMutableDictionary   *dictSavedInstanceState;
 }
 
-
 // rarely any SECTION_ has no VIEW_
 +(id) intentWithSectionName: (NSString*) name;
 
